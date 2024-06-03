@@ -17,7 +17,7 @@ export class MessageService {
         @Inject(REQUEST) private req: AuthenticatedRequest,
     ) { }
 
-    findAllByConversationId(keyword?: string, skip = 0, limit = 10, next_cursor = ''): Observable<Message[]> {
+    findAll(keyword?: string, skip = 0, limit = 10, next_cursor = ''): Observable<Message[]> {
         let query = this.messageModel.find();
 
         if (keyword) {

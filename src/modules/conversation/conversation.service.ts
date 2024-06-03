@@ -16,8 +16,12 @@ export class ConversationService {
         @Inject(REQUEST) private req: AuthenticatedRequest,
     ) { }
 
-    getConversations(): Observable<Conversation[]> {
-        return from(this.conversationModel.find({}).exec());
+    getConversations(search?: string): Observable<Conversation[]> {
+        const query = search
+            ? { 'name': { $regex: search, $options: 'i' } }
+            : {};
+
+        return from(this.conversationModel.find(query).exec());
     }
 
     findById(id: string): Observable<Conversation> {
@@ -28,7 +32,6 @@ export class ConversationService {
     }
 
     save(data: CreateConversationDto): Observable<Conversation> {
-        //console.log('req.user:'+JSON.stringify(this.req.user));
         const createPost: Promise<Conversation> = this.conversationModel.create({
             ...data,
             createdBy: { _id: this.req.user.id },

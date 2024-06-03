@@ -36,6 +36,9 @@ export class Conversation {
     @Prop({ required: true })
     name: string;
 
+    @Prop({ required: true })
+    owner: string;
+
     @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
     creatorId: string;
 

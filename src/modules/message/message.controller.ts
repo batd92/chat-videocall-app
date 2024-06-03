@@ -22,6 +22,6 @@ export class MessageController {
         @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip?: number,
         @Query('next_cursor', ParseObjectIdPipe) next_cursor?: string
     ): Observable<Message[]> {
-        return this.messageService.findAllByConversationId(keyword, skip, limit, next_cursor);
+        return this.messageService.findAll(keyword, skip, limit, next_cursor);
     }
 }
