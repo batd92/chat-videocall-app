@@ -4,7 +4,7 @@ import { Observable, from } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { RedisPropagatorInterceptor } from '../../core/redis-propagator/redis-propagator.interceptor';
 import { SocketStateService } from '../../core/socket-state/socket-state.service';
-import { EnterRoomRequest } from './dto/join-room.dto';
+import { EnterRoomRequest } from './dto/join-room.request.dto';
 
 @WebSocketGateway({
     cors: {

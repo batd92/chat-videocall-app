@@ -2,15 +2,16 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes } from 'mongoose';
 import { User } from './user.schema';
 import { Participant } from './participant.schema';
+import { TypeFileStorage } from 'constants/global.enum';
 
-export type ConversationDocument = HydratedDocument<Conversation>;
+export type RoomDocument = HydratedDocument<Room>;
 
 class FileStorage {
     @Prop({ required: true })
     url: string;
 
-    @Prop({ required: true, enum: ['Image', 'Video', 'Pdf', 'Doc'] })
-    type: string;
+    @Prop({ required: true })
+    type: TypeFileStorage;
 
     @Prop({ type: SchemaTypes.ObjectId, required: true })
     messageId: string;
@@ -26,7 +27,7 @@ class FileStorage {
 }
 
 @Schema({ timestamps: true })
-export class Conversation {
+export class Room {
     @Prop({ type: SchemaTypes.ObjectId, auto: true })
     _id: string;
 
@@ -57,8 +58,11 @@ export class Conversation {
     @Prop({ type: SchemaTypes.ObjectId, ref: 'User' })
     creator?: Partial<User>;
 
+    @Prop({ required: true })
+    avatarUrl: string;
+
     @Prop({ type: [{ type: SchemaTypes.ObjectId, ref: 'Participant' }] })
     participants?: Partial<Participant>[];
 }
 
-export const ConversationSchema = SchemaFactory.createForClass(Conversation);
+export const RoomSchema = SchemaFactory.createForClass(Room);

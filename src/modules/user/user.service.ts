@@ -17,6 +17,10 @@ export class UserService {
         return from(this.userModel.findOne({ username }).exec());
     }
 
+    findByUserId(id: string): Promise<User> {
+        return this.userModel.findOne({ _id: id }).exec();
+    }
+
     existsByUsername(username: string): Observable<boolean> {
         return from(this.userModel.exists({ username }).exec()).pipe(
             map((exists) => exists != null),

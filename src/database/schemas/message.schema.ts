@@ -30,6 +30,15 @@ export class FileContent {
     size: number;
 }
 
+export class TextContent {
+    @Prop({ required: true, index: true })
+    content: string;
+}
+export class NotifyContent {
+    @Prop({ required: true })
+    content: string;
+}
+
 export type MessageDocument = Message & Document;
 
 @Schema({ timestamps: true })
@@ -37,14 +46,17 @@ export class Message {
     @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
     _id: MongooseSchema.Types.ObjectId;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Conversation', required: true })
-    conversationId: MongooseSchema.Types.ObjectId;
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Room', required: true })
+    roomId: MongooseSchema.Types.ObjectId;
+
+    @Prop({ type: MongooseSchema.Types.ObjectId, required: false })
+    replyFromId: MongooseSchema.Types.ObjectId;
 
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
     userId: MongooseSchema.Types.ObjectId;
 
     @Prop({ required: true, type: MongooseSchema.Types.Mixed })
-    content: string | VideoCallContent | FileContent[];
+    content: TextContent | NotifyContent | VideoCallContent | FileContent[];
 
     @Prop({ required: true, enum: TypeMessage })
     type: TypeMessage;

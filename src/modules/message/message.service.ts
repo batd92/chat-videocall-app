@@ -2,38 +2,69 @@ import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Model, Types } from 'mongoose';
 import { EMPTY, from, Observable, of } from 'rxjs';
-import { mergeMap, throwIfEmpty } from 'rxjs/operators';
+import { map, mergeMap, throwIfEmpty } from 'rxjs/operators';
 import { AuthenticatedRequest } from '../../auth/interface/authenticated-request.interface';
 import { MESSAGE_MODEL } from '../../database/constants';
 import { Post } from '../../database/schemas/post.schema';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
+import { CreateMessageDto, LINK, TEXT, VIDEO, FILE } from './dto/create-message.dto';
 import { Message } from '../../database/schemas/message.schema';
+import { QueryMessageDto } from './dto/query-message.dto';
+import { ResMessageDto } from './dto/response.message.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class MessageService {
     constructor(
         @Inject(MESSAGE_MODEL) private messageModel: Model<Message>,
-        @Inject(REQUEST) private req: AuthenticatedRequest,
     ) { }
 
-    findAll(keyword?: string, skip = 0, limit = 10, next_cursor = ''): Observable<Message[]> {
+    findAll(inquery: QueryMessageDto): Observable<ResMessageDto[]> {
         let query = this.messageModel.find();
 
-        if (keyword) {
-            query = query.where('title').regex(new RegExp('.*' + keyword + '.*', 'i'));
+        if (inquery.keyword) {
+            query = query.where('title').regex(new RegExp('.*' + inquery.keyword + '.*', 'i'));
         }
 
-        if (next_cursor) {
-            const timestampCursor  = (new Types.ObjectId(next_cursor)).getTimestamp().getTime();
-            query = query.where('_id').lt(timestampCursor);
+        if (inquery.next_cursor) {
+            const cursor = (new Types.ObjectId(inquery.next_cursor)).getTimestamp().getTime();
+            if (inquery.isJumpToMessages) query = query.where('_id').gte(cursor);
+            query = query.where('_id').lt(cursor);
         }
 
         return from(
             query
-                .skip(skip)
-                .limit(limit)
+                .skip(inquery.skip)
+                .limit(inquery.limit)
                 .exec(),
+        ).pipe(
+            mergeMap(messages => {
+                const replyIds = messages.filter(message => message.replyFromId).map(message => message.replyFromId);
+                return this.messageModel.find({ _id: { $in: replyIds } }).exec().then(replyMessages => {
+                    const replyMessagesMap = replyMessages.reduce((map, message) => {
+                        map.set(message._id.toString(), message);
+                        return map;
+                    }, new Map<string, any>());
+
+                    return messages.map(message => {
+                        const resMessageDto: ResMessageDto = {
+                            content: message.content,
+                            _id: message._id.toString(),
+                            type: message.type,
+                            userId: message.userId.toString(),
+                            createdAt: (message as any).createdAt,
+                            updatedAt: (message as any).updatedAt,
+                            replyFromId: message.replyFromId ? {
+                                content: replyMessagesMap.get(message.replyFromId.toString()).content,
+                                _id: message.replyFromId.toString(),
+                                type: replyMessagesMap.get(message.replyFromId.toString()).type,
+                                userId: replyMessagesMap.get(message.replyFromId.toString()).userId,
+                                createdAt: replyMessagesMap.get(message.replyFromId.toString()).createdAt,
+                                updatedAt: replyMessagesMap.get(message.replyFromId.toString()).updatedAt,
+                            } : undefined
+                        };
+                        return resMessageDto;
+                    });
+                });
+            })
         );
     }
 
@@ -45,27 +76,14 @@ export class MessageService {
     }
 
     // from socket
-    save(data: CreateMessageDto): Observable<Message> {
-        const createMessage: Promise<Message> = this.messageModel.create({
-            ...data,
-            createdBy: { _id: this.req.user.id },
-        });
-        return from(createMessage);
-    }
+    reciveMessageFromSocket(data: CreateMessageDto): Observable<Message> {
+        // TODO
+        // Khi có message được gửi từ socket qua thì tạo message vào bảng Message
+        // Nếu message là file thì thực hiện save file ở thư mục chỉ định
+        // Thông báo cho room cập nhật thông tin cuộc hội thoại vào cache
+        const createMessage: Promise<Message> = this.messageModel.create(this.buildMessageRequest(data));
 
-    update(id: string, data: UpdateMessageDto): Observable<Message> {
-        return from(
-            this.messageModel
-                .findOneAndUpdate(
-                    { _id: id },
-                    { ...data, updatedBy: { _id: this.req.user.id } },
-                    { new: true },
-                )
-                .exec(),
-        ).pipe(
-            mergeMap((p) => (p ? of(p) : EMPTY)),
-            throwIfEmpty(() => new NotFoundException(`post:$id was not found`)),
-        );
+        return from(createMessage);
     }
 
     deleteById(id: string): Observable<Post> {
@@ -77,5 +95,38 @@ export class MessageService {
 
     deleteAll(): Observable<any> {
         return from(this.messageModel.deleteMany({}).exec());
+    }
+
+    buildMessageRequest(message: any) {
+        switch (message.type) {
+            case TEXT:
+                return {
+                    content: message.content,
+                    roomId: message.roomId,
+                    type: /^(ftp|http|https):\/\/[^ "]+$/.test(message.content.toString()) ? LINK : TEXT,
+                    userId: message.userId,
+                    replyFromId: message.messageId || ''
+                }
+            case VIDEO:
+                return {
+                    content: message.content,
+                    roomId: message.roomId,
+                    type: message.type,
+                    userId: message.userId,
+                    replyFromId: message.messageId || ''
+                }
+            case FILE:
+                return {
+                    content: message.content,
+                    roomId: message.roomId,
+                    type: message.type,
+                    userId: message.userId,
+                    replyFromId: message.messageId || ''
+                }
+        }
+    }
+
+    buildMessageResponse() {
+
     }
 }

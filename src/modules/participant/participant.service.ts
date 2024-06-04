@@ -20,14 +20,6 @@ export class ParticipantService {
         );
     }
 
-    findAll(): Observable<Participant[]> {
-        return from(this.participantModel.find().exec()).pipe(
-            catchError(err => {
-                throw new Error(`Error fetching participants: ${err.message}`);
-            })
-        );
-    }
-
     findOne(id: string): Observable<Participant> {
         return from(this.participantModel.findById(id).exec()).pipe(
             map(participant => {
@@ -42,24 +34,8 @@ export class ParticipantService {
         );
     }
 
-    update(id: string, update: Partial<Participant>): Observable<Participant> {
-        return from(
-            this.participantModel.findByIdAndUpdate(id, update, { new: true }).exec(),
-        ).pipe(
-            map(participant => {
-                if (!participant) {
-                    throw new NotFoundException(`Participant with id ${id} not found`);
-                }
-                return participant;
-            }),
-            catchError(err => {
-                throw new Error(`Error updating participant: ${err.message}`);
-            })
-        );
-    }
-
     delete(id: string): Observable<Participant> {
-        return from(this.participantModel.findOneAndDelete({_id: id}).exec()).pipe(
+        return from(this.participantModel.findOneAndDelete({ _id: id }).exec()).pipe(
             map(participant => {
                 if (!participant) {
                     throw new NotFoundException(`Participant with id ${id} not found`);

@@ -37,3 +37,11 @@ export enum ETypeChanel {
     ROOM = "room",
     USER = "user"
 }
+
+export enum TypeFileStorage {
+    IMAGE = "Image",
+    VIDEO = "Video",
+    PDF = "Pdf",
+    DOC = "Doc",
+    LINK = "Link",
+}

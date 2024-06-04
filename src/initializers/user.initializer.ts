@@ -17,9 +17,9 @@ export class UserDataInitializerService
         console.log('(UserModule) is initialized...');
         await this.userModel.deleteMany({});
         const user = {
-            username: 'napa',
+            username: 'user01',
             password: 'password',
-            email: 'napa@example.com',
+            email: 'user01@example.com',
             roles: [RoleType.USER],
         };
 

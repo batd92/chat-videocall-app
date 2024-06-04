@@ -6,7 +6,7 @@ import {
     USER_MODEL,
     FILE_MODEL,
     MESSAGE_MODEL,
-    CONVERSATION_MODEL,
+    ROOM_MODEL,
     PARTICIPANT_MODEL,
     USER_SESSION_MODEL
 } from './constants';
@@ -16,7 +16,7 @@ import { PostSchema } from '../database/schemas/post.schema';
 import { UserSchema } from '../database/schemas/user.schema';
 import { FileSchema } from '../database/schemas/file.schema';
 import { MessageSchema } from '../database/schemas/message.schema';
-import { ConversationSchema } from '../database/schemas/conversation.schema';
+import { RoomSchema } from './schemas/room.schema';
 import { ParticipantSchema } from '../database/schemas/participant.schema';
 import { UserSessionSchema } from '../database/schemas/user.session.schema';
 
@@ -47,8 +47,8 @@ export const databaseModelsProviders = [
         inject: [DATABASE_CONNECTION],
     },
     {
-        provide: CONVERSATION_MODEL,
-        useFactory: (connection: Connection) => connection.model('Conversation', ConversationSchema),
+        provide: ROOM_MODEL,
+        useFactory: (connection: Connection) => connection.model('Room', RoomSchema),
         inject: [DATABASE_CONNECTION],
     },
     {

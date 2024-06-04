@@ -1,6 +1,6 @@
 # Set nginx base image
 FROM node:18
-LABEL maintainer="NapaGlobal"
+LABEL maintainer="Video"
 WORKDIR  /app
 COPY  ./dist ./dist
 COPY package.json .
