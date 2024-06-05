@@ -4,12 +4,17 @@ import { Model } from 'mongoose';
 import { from, Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Participant, ParticipantDocument } from '../../database/schemas/participant.schema';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PARTICIPANT_MODEL } from 'database/constants';
 
 @Injectable()
 export class ParticipantService {
     constructor(
-        @InjectModel(Participant.name) private readonly participantModel: Model<ParticipantDocument>,
-    ) { }
+        @InjectModel(PARTICIPANT_MODEL) private readonly participantModel: Model<ParticipantDocument>,
+        private readonly eventEmitter: EventEmitter2
+    ) {
+        this.eventEmitter.on('roomDeleted', (roomId: string) => this.delete(roomId));
+    }
 
     create(participant: Partial<Participant>): Observable<Participant> {
         const newParticipant = new this.participantModel(participant);
@@ -34,17 +39,11 @@ export class ParticipantService {
         );
     }
 
-    delete(id: string): Observable<Participant> {
-        return from(this.participantModel.findOneAndDelete({ _id: id }).exec()).pipe(
-            map(participant => {
-                if (!participant) {
-                    throw new NotFoundException(`Participant with id ${id} not found`);
-                }
-                return participant;
-            }),
-            catchError(err => {
-                throw new Error(`Error deleting participant: ${err.message}`);
-            })
-        );
+    delete(id: string): void {
+        this.participantModel.findOneAndUpdate(
+            { _id: id },
+            { $set: { deletedAt: Date.now() } },
+            { new: true },
+        ).exec();
     }
 }

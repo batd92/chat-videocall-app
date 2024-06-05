@@ -11,10 +11,8 @@ import {
     USER_SESSION_MODEL
 } from './constants';
 
-import { CommentSchema } from '../database/schemas/comment.schema';
-import { PostSchema } from '../database/schemas/post.schema';
 import { UserSchema } from '../database/schemas/user.schema';
-import { FileSchema } from '../database/schemas/file.schema';
+import { FileStorageSchema } from './schemas/file-storage.schema';
 import { MessageSchema } from '../database/schemas/message.schema';
 import { RoomSchema } from './schemas/room.schema';
 import { ParticipantSchema } from '../database/schemas/participant.schema';
@@ -22,23 +20,13 @@ import { UserSessionSchema } from '../database/schemas/user.session.schema';
 
 export const databaseModelsProviders = [
     {
-        provide: POST_MODEL,
-        useFactory: (connection: Connection) => connection.model('Post', PostSchema),
-        inject: [DATABASE_CONNECTION],
-    },
-    {
-        provide: COMMENT_MODEL,
-        useFactory: (connection: Connection) => connection.model('Comment', CommentSchema),
-        inject: [DATABASE_CONNECTION],
-    },
-    {
         provide: USER_MODEL,
         useFactory: (connection: Connection) => connection.model('User', UserSchema),
         inject: [DATABASE_CONNECTION],
     },
     {
         provide: FILE_MODEL,
-        useFactory: (connection: Connection) => connection.model('File', FileSchema),
+        useFactory: (connection: Connection) => connection.model('FileStorage', FileStorageSchema),
         inject: [DATABASE_CONNECTION],
     },
     {

@@ -5,7 +5,6 @@ export class ResRoomDto {
     readonly isGroup: boolean;
     readonly name: string;
     readonly owner: string;
-    readonly fileStorages: FileStorage[];
     readonly avatarUrl: string;
     readonly participants: ParticipantDto[];
     readonly totalMessage: number;

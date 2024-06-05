@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes } from 'mongoose';
 
-export type FileDocument = HydratedDocument<File>;
+export type FileStorageDocument = HydratedDocument<FileStorage>;
 
 @Schema({ timestamps: true })
-export class File {
+export class FileStorage {
     @Prop({ type: SchemaTypes.ObjectId, auto: true })
     _id: string;
 
@@ -17,8 +17,8 @@ export class File {
     @Prop({ default: "" })
     modelType?: string;
 
-    @Prop({ default: "" })
-    modelId?: string;
+    @Prop({ default: "", required: true })
+    roomId: string;
 
     @Prop({ default: 0 })
     size?: number;
@@ -27,4 +27,4 @@ export class File {
     file_name?: string;
 }
 
-export const FileSchema = SchemaFactory.createForClass(File);
+export const FileStorageSchema = SchemaFactory.createForClass(FileStorage);

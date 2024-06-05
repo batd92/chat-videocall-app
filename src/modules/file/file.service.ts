@@ -1,51 +1,50 @@
 import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Model, Types } from 'mongoose';
-import { EMPTY, from, Observable, of , catchError, toArray, map } from 'rxjs';
+import { EMPTY, from, Observable, of, catchError, toArray, map } from 'rxjs';
 import { mergeMap, throwIfEmpty } from 'rxjs/operators';
 import { AuthenticatedRequest } from '../../auth/interface/authenticated-request.interface';
 import { FILE_MODEL } from '../../database/constants';
-import { File } from '../../database/schemas/file.schema';
+import { FileStorage } from '../../database/schemas/file-storage.schema';
 import { deleteFileOnServer } from '../../common/helper/file-helper';
 
 @Injectable({ scope: Scope.REQUEST })
 export class FileService {
     constructor(
-        @Inject(FILE_MODEL) private fileModel: Model<File>,
+        @Inject(FILE_MODEL) private fileStorageModel: Model<FileStorage>,
         @Inject(REQUEST) private req: AuthenticatedRequest,
     ) { }
 
-    findById(id: string): Observable<File> {
-        return from(this.fileModel.findOne({ _id: id }).exec()).pipe(
+    findById(id: string): Observable<FileStorage> {
+        return from(this.fileStorageModel.findOne({ _id: id }).exec()).pipe(
             mergeMap((p) => (p ? of(p) : EMPTY)),
             throwIfEmpty(() => new NotFoundException(`file:$id was not found`)),
         );
     }
 
-    save(data: any): Observable<File> {
-        const file: Promise<File> = this.fileModel.create({
+    save(data: any): Observable<FileStorage> {
+        return from(this.fileStorageModel.create({
             ...data,
             createdBy: { _id: this.req.user.id },
-        });
-        return from(file);
+        }));
     }
 
-    deleteById(id: string): Observable<File> {
-        return from(this.fileModel.findOneAndDelete({ _id: id }).exec()).pipe(
+    deleteById(id: string): Observable<FileStorage> {
+        return from(this.fileStorageModel.findOneAndDelete({ _id: id }).exec()).pipe(
             mergeMap((p) => (p ? of(p.id) : EMPTY)),
             throwIfEmpty(() => new NotFoundException(`file:$id was not found`)),
         );
     }
 
     deleteAll(): Observable<any> {
-        return from(this.fileModel.deleteMany({}).exec());
+        return from(this.fileStorageModel.deleteMany({}).exec());
     }
 
     commitFile(paths: string[], model: { modelId: string, modelType: string }): Observable<any> {
         const urlServer = process.env.SERVER_FILE_URL || '';
         paths = paths.map(x => x.replace(/\\/g, "/").replace(`${urlServer}/`, ""));
 
-        return from(this.fileModel.updateMany(
+        return from(this.fileStorageModel.updateMany(
             { path: { $in: paths } },
             { modelId: model.modelId, modelType: model.modelType }
         )).pipe(
@@ -76,7 +75,7 @@ export class FileService {
             ]
         };
 
-        return from(this.fileModel.find(condition).exec()).pipe(
+        return from(this.fileStorageModel.find(condition).exec()).pipe(
             mergeMap((files) => from(files)),
             mergeMap((file) =>
                 from(deleteFileOnServer(file.path, urlServer)).pipe(
@@ -90,7 +89,7 @@ export class FileService {
             toArray(),
             mergeMap((fileIds) =>
                 fileIds.length > 0
-                    ? from(this.fileModel.deleteMany({ _id: { $in: fileIds } }).exec())
+                    ? from(this.fileStorageModel.deleteMany({ _id: { $in: fileIds } }).exec())
                     : EMPTY
             ),
             catchError((err) => {

@@ -27,3 +27,8 @@ export class Participant {
 }
 
 export const ParticipantSchema = SchemaFactory.createForClass(Participant);
+
+ParticipantSchema.pre(['find', 'findOne'], function (next) {
+    this.populate('user').populate('room');
+    next();
+});

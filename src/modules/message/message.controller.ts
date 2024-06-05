@@ -7,7 +7,7 @@ import {
 import { Observable } from 'rxjs';
 import { MessageService } from './message.service';
 import { QueryMessageDto } from './dto/query-message.dto';
-import { ResMessageDto } from './dto/response.message.dto';
+import { Message } from 'database/schemas/message.schema';
 
 @Controller({ path: 'messages', scope: Scope.REQUEST })
 export class MessageController {
@@ -16,7 +16,7 @@ export class MessageController {
     @Get('/api/room/:roomId/messages')
     getAllPosts(
         @Query() query?: QueryMessageDto
-    ): Observable<ResMessageDto[]> {
+    ): Observable<Message[]> {
         return this.messageService.findAll(query);
     }
 }

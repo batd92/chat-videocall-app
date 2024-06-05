@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Document, Schema as MongooseSchema, SchemaTypes } from 'mongoose';
 import { TypeMessage, StatusJitsiMeet, TypeStorageMessage } from '../../constants/global.enum'
 
 export class VideoCallContent {
@@ -34,26 +34,42 @@ export class TextContent {
     @Prop({ required: true, index: true })
     content: string;
 }
+
 export class NotifyContent {
     @Prop({ required: true })
     content: string;
+}
+
+export enum ActionType {
+    Like = 'Like',
+    Love = 'Love',
+}
+export class Action {
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+    userId: MongooseSchema.Types.ObjectId;
+
+    @Prop({ required: true, enum: ActionType })
+    type: ActionType;
+
+    @Prop({ required: true })
+    createdAt: number;
 }
 
 export type MessageDocument = Message & Document;
 
 @Schema({ timestamps: true })
 export class Message {
-    @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
+    @Prop({ type: SchemaTypes.ObjectId, required: true })
     _id: MongooseSchema.Types.ObjectId;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Room', required: true })
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Room', required: true })
     roomId: MongooseSchema.Types.ObjectId;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, required: false })
-    replyFromId: MongooseSchema.Types.ObjectId;
-
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
     userId: MongooseSchema.Types.ObjectId;
+
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Message', required: false })
+    replyFromId: MongooseSchema.Types.ObjectId;
 
     @Prop({ required: true, type: MongooseSchema.Types.Mixed })
     content: TextContent | NotifyContent | VideoCallContent | FileContent[];
@@ -63,7 +79,17 @@ export class Message {
 
     @Prop({ required: true, default: 0 })
     deletedAt: number;
+
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Message' })
+    messageRepy?: Message;
+
+    @Prop({ type: [Action] })
+    actions: Action[];
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);
 
+MessageSchema.pre(['find', 'findOne'], function (next) {
+    this.populate('userId').populate('messageReply');
+    next();
+});

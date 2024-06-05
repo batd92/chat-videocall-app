@@ -32,7 +32,7 @@ export class VideoCallGateway {
         @ConnectedSocket() client: Socket,
         @MessageBody() payload: VideoCallRequest
     ): Observable<WsResponse<VideoCallRequest>> {
-        return from(this.roomService.findById(payload.roomId)).pipe(
+        return from(this.roomService.findOne(payload.roomId)).pipe(
             mergeMap(async (room) => {
                 this.checkRoom(room, payload.userId);
 

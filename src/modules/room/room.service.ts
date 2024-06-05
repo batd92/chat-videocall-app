@@ -1,10 +1,8 @@
 import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
 import { Participant } from 'database/schemas/participant.schema';
 import { Model } from 'mongoose';
 import { EMPTY, from, Observable, of, switchMap } from 'rxjs';
 import { catchError, map, mergeMap, throwIfEmpty } from 'rxjs/operators';
-import { AuthenticatedRequest } from '../../auth/interface/authenticated-request.interface';
 import { ROOM_MODEL, PARTICIPANT_MODEL } from '../../database/constants';
 import { Room } from '../../database/schemas/room.schema';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -12,15 +10,20 @@ import { ChangeRoomNameDto, InviteUserDto } from './dto/update-room.dto';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ParticipantDto, ResRoomDto } from './dto/response.room.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Message } from 'database/schemas/message.schema';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RoomService {
     constructor(
         @Inject(ROOM_MODEL) private roomModel: Model<Room>,
-        @Inject(REQUEST) private req: AuthenticatedRequest,
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
         @Inject(PARTICIPANT_MODEL) private participantModel: Model<Participant>,
-    ) { }
+        private readonly eventEmitter: EventEmitter2,
+    ) {
+        this.eventEmitter.on('newMessage', (message: Message) => this.onNewMessageInRoom(message));
+        this.eventEmitter.on('removeMessage', (messageId: string) => this.onRemoveMessageInRoom(messageId));
+    }
 
     getRooms(search?: string): Observable<Room[]> {
         const query = search
@@ -30,11 +33,25 @@ export class RoomService {
         return from(this.roomModel.find(query).exec());
     }
 
+    /**
+     * Find one
+     * @param id 
+     * @returns 
+     */
+    findOne(id: string): Observable<Room> {
+        return from(
+            this.roomModel.findById(id)
+                .populate('creator', 'username avatar')
+                .populate('participants.user', 'username avatar')
+                .exec()
+        )
+    }
+
     findById(id: string): Observable<ResRoomDto> {
         return from(
             this.roomModel.findById(id)
-                .populate('creator', 'username avatar') // Chỉ populate các trường cần thiết của creator
-                .populate('participants.user', 'username avatar') // Chỉ populate các trường cần thiết của participants
+                .populate('creator', 'username avatar')
+                .populate('participants.user', 'username avatar')
                 .exec()
         ).pipe(
             map((room: Room) => {
@@ -43,16 +60,15 @@ export class RoomService {
                     isGroup: room.isGroup,
                     name: room.name,
                     owner: room.owner,
-                    fileStorages: room.fileStorages,
                     avatarUrl: room.avatarUrl,
-                    totalMessage: room.totalMessage, // Chuyển totalMessage thành string
+                    totalMessage: room.totalMessage,
                     participants: room.participants.map(participant => {
                         const participantDto: ParticipantDto = {
                             userId: participant.userId,
-                            indexMessageRead: participant.indexMessageRead.toString(), // Chuyển indexMessageRead thành string
+                            indexMessageRead: participant.indexMessageRead.toString(),
                             isOnline: true,
-                            username: participant.user.username, // Lấy username từ user của participant
-                            avatar: participant.user.avatar, // Lấy avatar từ user của participant
+                            username: participant.user.username,
+                            avatar: participant.user.avatar,
                         };
                         return participantDto;
                     }),
@@ -123,11 +139,12 @@ export class RoomService {
         return updatedRoom;
     }
 
-    // TODO
-    // Tìm không thấy conversation thì trả về lỗi
-    // Nếu conversation đó có !conversation.isGroup thì trả về lỗi vì nó không phải group
-    // Nếu userId đó đã tồn tại thì thôi còn không thì tạo các participant dựa vào userId cho conversation
-    // cache lại thông tin conversation đó, cập nhật TTL cho cache
+    /**
+     * Update room name
+     * @param id 
+     * @param data 
+     * @returns 
+     */
     async updateNameOfRoom(id: string, data: ChangeRoomNameDto): Promise<Room> {
         const room = await this.roomModel.findById(id).exec();
         if (!room) {
@@ -140,6 +157,12 @@ export class RoomService {
         return updatedRoom;
     }
 
+    /**
+     * Update room avatar
+     * @param id
+     * @param file 
+     * @returns 
+     */
     async updateAvatar(id: string, file: any): Promise<Room> {
         const avatarUrl = file.path;
         const room = await this.roomModel.findById(id).exec();
@@ -152,22 +175,43 @@ export class RoomService {
         return savedRoom;
     }
 
+    /**
+     * Remove room
+     * @param id 
+     * @returns 
+     */
     delete(id: string): Observable<Room> {
-        return from(this.roomModel.findOneAndDelete({ _id: id }).exec()).pipe(
-            map(participant => {
-                if (!participant) {
+        return from(
+            this.roomModel.findOneAndUpdate(
+                { _id: id },
+                { $set: { deletedAt: Date.now() } },
+                { new: true },
+            ).exec(),
+        ).pipe(
+            map(room => {
+                if (!room) {
                     throw new NotFoundException(`Room with id ${id} not found`);
                 }
-                return participant;
+                this.eventEmitter.emit('roomDeleted', id);
+                return room;
             }),
             catchError(err => {
                 throw new Error(`Error deleting room: ${err.message}`);
-            })
+            }),
         );
     }
 
-    onUpdateRoom(id: string, data: ChangeRoomNameDto): void {
+    onNewMessageInRoom(message: Message): void {
         // TODO
+
+    }
+
+    onUserInRoom(message: Message): void {
+        // TODO
+
+    }
+
+    onRemoveMessageInRoom(messageId: string): void {
 
     }
 }

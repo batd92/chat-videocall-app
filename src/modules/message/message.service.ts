@@ -1,23 +1,23 @@
 import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
 import { Model, Types } from 'mongoose';
 import { EMPTY, from, Observable, of } from 'rxjs';
 import { map, mergeMap, throwIfEmpty } from 'rxjs/operators';
-import { AuthenticatedRequest } from '../../auth/interface/authenticated-request.interface';
 import { MESSAGE_MODEL } from '../../database/constants';
-import { Post } from '../../database/schemas/post.schema';
 import { CreateMessageDto, LINK, TEXT, VIDEO, FILE } from './dto/create-message.dto';
-import { Message } from '../../database/schemas/message.schema';
+import { FileContent, Message } from '../../database/schemas/message.schema';
 import { QueryMessageDto } from './dto/query-message.dto';
-import { ResMessageDto } from './dto/response.message.dto';
-
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BaseRequest, MessageRequest, RemoveMessageRequest, UploadFileRequest } from 'gateway/chat/dto/chat-request.dto';
 @Injectable({ scope: Scope.REQUEST })
 export class MessageService {
     constructor(
         @Inject(MESSAGE_MODEL) private messageModel: Model<Message>,
-    ) { }
+        private readonly eventEmitter: EventEmitter2
+    ) {
 
-    findAll(inquery: QueryMessageDto): Observable<ResMessageDto[]> {
+    }
+
+    findAll(inquery: QueryMessageDto): Observable<Message[]> {
         let query = this.messageModel.find();
 
         if (inquery.keyword) {
@@ -35,61 +35,74 @@ export class MessageService {
                 .skip(inquery.skip)
                 .limit(inquery.limit)
                 .exec(),
-        ).pipe(
-            mergeMap(messages => {
-                const replyIds = messages.filter(message => message.replyFromId).map(message => message.replyFromId);
-                return this.messageModel.find({ _id: { $in: replyIds } }).exec().then(replyMessages => {
-                    const replyMessagesMap = replyMessages.reduce((map, message) => {
-                        map.set(message._id.toString(), message);
-                        return map;
-                    }, new Map<string, any>());
-
-                    return messages.map(message => {
-                        const resMessageDto: ResMessageDto = {
-                            content: message.content,
-                            _id: message._id.toString(),
-                            type: message.type,
-                            userId: message.userId.toString(),
-                            createdAt: (message as any).createdAt,
-                            updatedAt: (message as any).updatedAt,
-                            replyFromId: message.replyFromId ? {
-                                content: replyMessagesMap.get(message.replyFromId.toString()).content,
-                                _id: message.replyFromId.toString(),
-                                type: replyMessagesMap.get(message.replyFromId.toString()).type,
-                                userId: replyMessagesMap.get(message.replyFromId.toString()).userId,
-                                createdAt: replyMessagesMap.get(message.replyFromId.toString()).createdAt,
-                                updatedAt: replyMessagesMap.get(message.replyFromId.toString()).updatedAt,
-                            } : undefined
-                        };
-                        return resMessageDto;
-                    });
-                });
-            })
         );
     }
 
     findById(id: string): Observable<Message> {
         return from(this.messageModel.findOne({ _id: id }).exec()).pipe(
             mergeMap((p) => (p ? of(p) : EMPTY)),
-            throwIfEmpty(() => new NotFoundException(`post:$id was not found`)),
+            throwIfEmpty(() => new NotFoundException(`message:$id was not found`)),
         );
     }
 
-    // from socket
-    reciveMessageFromSocket(data: CreateMessageDto): Observable<Message> {
-        // TODO
-        // Khi có message được gửi từ socket qua thì tạo message vào bảng Message
-        // Nếu message là file thì thực hiện save file ở thư mục chỉ định
-        // Thông báo cho room cập nhật thông tin cuộc hội thoại vào cache
-        const createMessage: Promise<Message> = this.messageModel.create(this.buildMessageRequest(data));
-
-        return from(createMessage);
+    /**
+     * Recive message from socket
+     * @param data 
+     * @returns 
+     */
+    async onMessageFromSocket(data: MessageRequest): Promise<void> {
+        const message: Message = await this.messageModel.create(this.buildMessageRequest(data));
+        this.eventEmitter.emit('newMessage', message);
     }
 
-    deleteById(id: string): Observable<Post> {
-        return from(this.messageModel.findOneAndDelete({ _id: id }).exec()).pipe(
-            mergeMap((p) => (p ? of(p.id) : EMPTY)),
-            throwIfEmpty(() => new NotFoundException(`post:$id was not found`)),
+
+    /**
+     * Remove message from socket
+     * @param data 
+     * @returns 
+     */
+    onRemoveMessageFromSocket(data: RemoveMessageRequest): void {
+        this.deleteById(data.messageId);
+        this.eventEmitter.emit('removeMessage', data.messageId);
+    }
+
+    /**
+     * Read last message
+     * @param data 
+     * @returns 
+     */
+    onReadLastMessageFromSocket(data: BaseRequest): void {
+        this.messageModel.findOneAndUpdate(
+            { userId: data.userId, roomId: data.roomId },
+            { $set: { indexMessageRead: 0 } },
+            { new: true }
+        ).exec()
+    }
+
+    /**
+     * Uplaod file on socket
+     * @param data 
+     */
+    async onUploadFileFromSocket(data: UploadFileRequest): Promise<void> {
+        const message: Message = await this.messageModel.create(this.buildFileRequest(data));
+        this.eventEmitter.emit('uploadFile', message);
+    }
+
+    /**
+     * Remove message
+     * @param id 
+     * @returns 
+     */
+    deleteById(id: string): Observable<Message> {
+        return from(
+            this.messageModel.findOneAndUpdate(
+                { _id: id },
+                { $set: { deletedAt: Date.now() } },
+                { new: true }
+            ).exec()
+        ).pipe(
+            mergeMap((p) => (p ? of(p) : EMPTY)),
+            throwIfEmpty(() => new NotFoundException(`message: ${id} was not found`)),
         );
     }
 
@@ -97,36 +110,51 @@ export class MessageService {
         return from(this.messageModel.deleteMany({}).exec());
     }
 
-    buildMessageRequest(message: any) {
-        switch (message.type) {
-            case TEXT:
-                return {
-                    content: message.content,
-                    roomId: message.roomId,
-                    type: /^(ftp|http|https):\/\/[^ "]+$/.test(message.content.toString()) ? LINK : TEXT,
-                    userId: message.userId,
-                    replyFromId: message.messageId || ''
-                }
-            case VIDEO:
-                return {
-                    content: message.content,
-                    roomId: message.roomId,
-                    type: message.type,
-                    userId: message.userId,
-                    replyFromId: message.messageId || ''
-                }
-            case FILE:
-                return {
-                    content: message.content,
-                    roomId: message.roomId,
-                    type: message.type,
-                    userId: message.userId,
-                    replyFromId: message.messageId || ''
-                }
+    /**
+     * Build message request
+     * @param message 
+     * @returns 
+     */
+    buildMessageRequest(message: MessageRequest) {
+        return {
+            content: message.content,
+            roomId: message.roomId,
+            type: /^(ftp|http|https):\/\/[^ "]+$/.test(message.content.toString()) ? LINK : TEXT,
+            userId: message.userId,
+            replyFromId: message.replyFromId || ''
         }
     }
 
-    buildMessageResponse() {
+    /**
+     * Build file request
+     * @param message 
+     * @returns 
+     */
+    buildFileRequest(message: UploadFileRequest) {
+        if (message.files) {
+            const contents = (message.files).map((file: FileContent) => file);
+            return {
+                content: contents,
+                roomId: message.roomId,
+                type: message.type,
+                userId: message.userId,
+                replyFromId: message.replyFromId || ''
+            }
+        }
+    }
 
+    /**
+     * Build video request
+     * @param message 
+     * @returns 
+     */
+    buildVideoRequest(message: MessageRequest) {
+        return {
+            content: message.content,
+            roomId: message.roomId,
+            type: message.type,
+            userId: message.userId,
+            replyFromId: message.replyFromId || ''
+        }
     }
 }

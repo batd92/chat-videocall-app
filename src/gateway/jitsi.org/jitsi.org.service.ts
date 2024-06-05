@@ -24,7 +24,7 @@ export class JitsiorgService {
             },
             aud: this.configService.get('JWT_APP_ID'),
             iss: this.configService.get('JWT_APP_ID'),
-            sub: "example.video.com",
+            sub: this.configService.get('SUB_DOMAIN'), //"example.video.com",
             room: request.roomId
         }, this.configService.get('JWT_SECRET'), {
             header: {

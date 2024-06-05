@@ -2,29 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes } from 'mongoose';
 import { User } from './user.schema';
 import { Participant } from './participant.schema';
-import { TypeFileStorage } from 'constants/global.enum';
 
 export type RoomDocument = HydratedDocument<Room>;
-
-class FileStorage {
-    @Prop({ required: true })
-    url: string;
-
-    @Prop({ required: true })
-    type: TypeFileStorage;
-
-    @Prop({ type: SchemaTypes.ObjectId, required: true })
-    messageId: string;
-
-    @Prop({ type: SchemaTypes.ObjectId, required: true })
-    userId: string;
-
-    @Prop()
-    fileName?: string;
-
-    @Prop()
-    size?: number;
-}
 
 @Schema({ timestamps: true })
 export class Room {
@@ -37,14 +16,8 @@ export class Room {
     @Prop({ required: true })
     name: string;
 
-    @Prop({ required: true })
-    owner: string;
-
     @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
-    creatorId: string;
-
-    @Prop({ type: [FileStorage], default: [] })
-    fileStorages: FileStorage[];
+    owner: string;
 
     @Prop({ required: true, default: 0 })
     totalMessage: number;
@@ -66,3 +39,7 @@ export class Room {
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
+
+RoomSchema.pre(['find', 'findOne'], function() {
+    this.populate('participants').populate('owner');
+});
