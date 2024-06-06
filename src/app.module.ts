@@ -5,7 +5,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { LoggerModule } from './logger/logger.module';
-import { EventsGateway } from './gateway/room-join/room-join.gateway';
+import { WSJwtAuthSocketModule } from './core/guard/jwt-auth-soket.module';
 import { CoreModule } from './core/core.module';
 @Module({
     imports: [
@@ -13,10 +13,11 @@ import { CoreModule } from './core/core.module';
         EventEmitterModule.forRoot(),
         //DatabaseModule,
         CoreModule,
+        WSJwtAuthSocketModule,
         LoggerModule.forRoot(),
     ],
     providers: [
-        EventsGateway
+        
     ]
 })
 export class AppModule { }

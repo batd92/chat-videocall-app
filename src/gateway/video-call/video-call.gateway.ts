@@ -1,15 +1,21 @@
-import { UseInterceptors, OnModuleInit, NotFoundException, UnauthorizedException, BadGatewayException } from '@nestjs/common';
+import { UseInterceptors, OnModuleInit, NotFoundException, UnauthorizedException, BadGatewayException, ForbiddenException } from '@nestjs/common';
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
 import { Observable, from, mergeMap, catchError, EMPTY, of } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { RedisPropagatorInterceptor } from '../../core/redis-propagator/redis-propagator.interceptor';
 import { SocketStateService } from '../../core/socket-state/socket-state.service';
 import { VideoCallRequest } from './dto/video-call.request.dto';
-import { VideoCallResponse } from './dto/video-call.response.dto';
 import { RoomService } from '../../modules/room/room.service';
 import { JitsiorgService } from '../jitsi.org/jitsi.org.service';
-import { START_CALL_EVENT, JOIN_CALL_EVENT, LEAVE_CALL_EVENT, CANCEL_CALL_EVENT, END_CALL_EVENT } from './events/event';
 import { Room } from 'database/schemas/room.schema';
+import { SubscribeEvent } from '../base-dto/subscribe.message';
+import { 
+    START_CALL_EVENT,
+    JOIN_CALL_EVENT,
+    LEAVE_CALL_EVENT,
+    REJECT_CALL_EVENT,
+    END_CALL_EVENT 
+} from '../base-dto/base.event';
 
 @WebSocketGateway({
     cors: {
@@ -27,106 +33,135 @@ export class VideoCallGateway {
         private readonly jitsiorgService: JitsiorgService,
     ) { }
 
-    @SubscribeMessage(START_CALL_EVENT)
+    /**
+     * Start the call
+     * @param socket 
+     * @param payload 
+     * @returns 
+     */
+    @SubscribeMessage(SubscribeEvent.startCall)
     startCall(
-        @ConnectedSocket() client: Socket,
+        @ConnectedSocket() socket: Socket,
         @MessageBody() payload: VideoCallRequest
     ): Observable<WsResponse<VideoCallRequest>> {
-        return from(this.roomService.findOne(payload.roomId)).pipe(
+        return this.roomService.findOne(payload.roomId).pipe(
             mergeMap(async (room) => {
                 this.checkRoom(room, payload.userId);
 
-                const roomDB = this.socketStateService.getRoomState(payload, client);
+                const roomDB = this.socketStateService.getRoomState(payload, socket);
                 if (roomDB.jitsiToken) {
                     throw new BadGatewayException(`Room started with room call.`);
                 }
-
                 // get Jitsi Token
                 const jitsiToken = await this.jitsiorgService.getInfoJitsi(payload);
-
-                // update cache
-                this.socketStateService.updateRoomState(payload, client, jitsiToken.token, jitsiToken.roomName);
-
                 return { event: START_CALL_EVENT, data: payload, userId: payload.userId, jitsiToken: jitsiToken.token };
             }),
             catchError((error) => {
-                client.emit('error', error.message);
+                socket.emit('error', error.message);
                 return EMPTY;
             }),
         );
     }
 
-    @SubscribeMessage(JOIN_CALL_EVENT)
+    /**
+     * Answer the call
+     * @param socket 
+     * @param payload 
+     * @returns 
+     */
+    @SubscribeMessage(SubscribeEvent.joinCall)
     joinCall(
-        @ConnectedSocket() client: Socket,
+        @ConnectedSocket() socket: Socket,
         @MessageBody() payload: VideoCallRequest
-    ): Observable<WsResponse<VideoCallResponse>> {
-        return from(this.roomService.findById(payload.roomId)).pipe(
+    ): Observable<WsResponse<VideoCallRequest>> {
+        return this.roomService.findOne(payload.roomId).pipe(
             mergeMap(async (room) => {
                 this.checkRoom(room, payload.userId);
 
-                const roomDB = this.socketStateService.getRoomState(payload, client);
-                if (roomDB.jitsiToken == 'incall') {
-                    throw new NotFoundException(`Room started with room call.`);
-                }
-                // update cache
-                this.socketStateService.updateRoomUserJoin(payload, client);
+                const roomDB = this.socketStateService.getRoomState(payload, socket);
 
-                return from([{ event: JOIN_CALL_EVENT, data: payload, userId: payload.userId, jitsiToken: roomDB.jitsiToken }]);
+                if (!roomDB.jitsiToken) {
+                    throw new ForbiddenException(`The call has ended`);
+                }
+
+                if (roomDB.userJoined.find(u => u.userId === payload.userId)) {
+                    throw new BadGatewayException(`User in call.`);
+                }
+                return { event: JOIN_CALL_EVENT, data: payload, userId: payload.userId };
             }),
             catchError((error) => {
-                client.emit('error', error.message);
+                socket.emit('error', error.message);
                 return EMPTY;
             }),
         );
     }
 
-    @SubscribeMessage(LEAVE_CALL_EVENT)
+    /**
+     * Leave the call
+     * @param socket 
+     * @param payload 
+     * @returns 
+     */
+    @SubscribeMessage(SubscribeEvent.leaveCall)
     leaveCall(
-        @ConnectedSocket() client: Socket,
+        @ConnectedSocket() socket: Socket,
         @MessageBody() payload: VideoCallRequest
-    ): Observable<WsResponse<VideoCallResponse>> {
-        return from(this.roomService.findById(payload.roomId)).pipe(
+    ): Observable<WsResponse<VideoCallRequest>> {
+        return this.roomService.findOne(payload.roomId).pipe(
             mergeMap(async (room) => {
                 this.checkRoom(room, payload.userId);
 
-                const roomDB = this.socketStateService.updateRoomUserLeave(payload, client);
-                if (!roomDB) {
-                    throw new NotFoundException(`Room not found.`);
+                const roomDB = this.socketStateService.getRoomState(payload, socket);
+
+                if (!roomDB.jitsiToken) {
+                    throw new ForbiddenException(`The call has ended`);
                 }
 
-                if (roomDB.userJoined.length <= 1) {
-                    return from([{ event: END_CALL_EVENT, data: payload, userId: payload.userId, jitsiToken: roomDB.jitsiToken }]);
+                if (!(roomDB.userJoined.find(u => u.userId === payload.userId))) {
+                    throw new BadGatewayException(`User don't in call.`);
                 }
-                return from([{ event: LEAVE_CALL_EVENT, data: payload, userId: payload.userId, jitsiToken: room.jitsiToken }]);
+
+                let eventName = LEAVE_CALL_EVENT;
+                if (roomDB.userJoined.filter(us => us.userId !== payload.userId).length <= 1) {
+                    eventName = END_CALL_EVENT;
+                }
+                return { event: eventName, data: payload, userId: payload.userId };
             }),
             catchError((error) => {
-                client.emit('error', error.message);
+                socket.emit('error', error.message);
                 return EMPTY;
             }),
         );
     }
 
-    @SubscribeMessage(CANCEL_CALL_EVENT)
-    cancelCall(
-        @ConnectedSocket() client: Socket,
+    /**
+     * Reject the call
+     * @param client 
+     * @param payload 
+     * @returns 
+     */
+    @SubscribeMessage(SubscribeEvent.rejectCall)
+    rejectCall(
+        @ConnectedSocket() socket: Socket,
         @MessageBody() payload: VideoCallRequest
-    ): Observable<WsResponse<VideoCallResponse>> {
-        return from(this.roomService.findById(payload.roomId)).pipe(
+    ): Observable<WsResponse<VideoCallRequest>> {
+        return this.roomService.findOne(payload.roomId).pipe(
             mergeMap(async (room) => {
                 this.checkRoom(room, payload.userId);
-                const roomDB = this.socketStateService.resetRoomUserLeave(payload, client);
-                if (!roomDB) {
-                    throw new NotFoundException(`Room not found.`);
+
+                const roomDB = this.socketStateService.getRoomState(payload, socket);
+
+                if (!roomDB.jitsiToken) {
+                    throw new ForbiddenException(`The call has ended`);
                 }
 
-                if (roomDB.userJoined.length <= 1) {
-                    return from([{ event: END_CALL_EVENT, data: payload, userId: payload.userId, jitsiToken: roomDB.jitsiToken }]);
+                if ((roomDB.userJoined.find(u => u.userId === payload.userId))) {
+                    throw new BadGatewayException(`User in call.`);
                 }
-                return from([{ event: LEAVE_CALL_EVENT, data: payload, userId: payload.userId, jitsiToken: roomDB.jitsiToken }]);
+                return { event: REJECT_CALL_EVENT, data: payload, userId: payload.userId };
             }),
             catchError((error) => {
-                client.emit('error', error.message);
+                socket.emit('error', error.message);
                 return EMPTY;
             }),
         );

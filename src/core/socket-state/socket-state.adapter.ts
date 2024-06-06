@@ -1,18 +1,16 @@
-import { INestApplicationContext, WebSocketAdapter } from '@nestjs/common';
+import { INestApplicationContext, Inject, UnauthorizedException, WebSocketAdapter } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { UserPrincipal } from 'auth/interface/user-principal.interface';
 import { Server, Socket } from 'socket.io';
 
 import { ServerOptions } from 'socket.io';
 import { RedisPropagatorService } from '../redis-propagator/redis-propagator.service';
 import { SocketStateService } from './socket-state.service';
-
-interface TokenPayload {
-    readonly userId: string;
-    readonly username: string;
-}
+import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-host';
+import { JwtAuthSocketGuardService } from 'core/guard/jwt-auth-soket.service';
 
 export interface AuthenticatedSocket extends Socket {
-    auth: TokenPayload;
+    auth: UserPrincipal;
 }
 
 export class SocketStateAdapter extends IoAdapter implements WebSocketAdapter {
@@ -20,6 +18,7 @@ export class SocketStateAdapter extends IoAdapter implements WebSocketAdapter {
         private readonly app: INestApplicationContext,
         private readonly socketStateService: SocketStateService,
         private readonly redisPropagatorService: RedisPropagatorService,
+        private readonly jwtAuthSocketGuardService: JwtAuthSocketGuardService,
     ) {
         super(app);
     }
@@ -30,26 +29,12 @@ export class SocketStateAdapter extends IoAdapter implements WebSocketAdapter {
 
         server.use(async (socket: AuthenticatedSocket, next) => {
             console.log('authenticated socket ....');
-            const token = socket.handshake.query?.token || socket.handshake.headers?.authorization;
+            const authToken = socket.handshake.query?.token[0] || socket.handshake.headers?.authorization;
 
-            if (!token) {
-                socket.auth = null;
-
-                // not authenticated connection is still valid
-                // thus no error
-                return next();
+            if (!authToken) {
+                throw new UnauthorizedException(`Unauthorized exception`);
             }
-
-            try {
-                // fake auth
-                socket.auth = {
-                    userId: '1234',
-                    username: '1234',
-                };
-                return next();
-            } catch (e) {
-                return next(e);
-            }
+            await this.jwtAuthSocketGuardService.canActivate(new ExecutionContextHost([socket]));
         });
 
         return server;
@@ -59,7 +44,7 @@ export class SocketStateAdapter extends IoAdapter implements WebSocketAdapter {
         server.on('connection', (socket: AuthenticatedSocket) => {
             console.log('connection ....', socket.auth);
             if (socket.auth) {
-                this.socketStateService.addSocket(socket.auth.userId, socket);
+                this.socketStateService.addSocket(socket.auth.id, socket);
                 socket.on('disconnect', () => {
                     this.socketStateService.removeSocket(socket);
 

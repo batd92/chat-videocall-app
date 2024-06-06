@@ -3,11 +3,20 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { Observable, from, mergeMap, catchError, EMPTY } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { RedisPropagatorInterceptor } from '../../core/redis-propagator/redis-propagator.interceptor';
-import { BaseRequest, UploadFileRequest, MessageRequest, RemoveMessageRequest } from './dto/chat-request.dto';
-import { MessageResponse } from './dto/chat-reponse.dto';
+import { UploadFileRequest, TextRequest, RemoveMessageRequest, MakeActionRequest } from './dto/chat-request.dto';
+import { BaseRequest } from '../base-dto/base.request';
 import { RoomService } from '../../modules/room/room.service';
 import { MessageService } from '../../modules/message/message.service';
 import { Room } from 'database/schemas/room.schema';
+import { SubscribeEvent } from '../base-dto/subscribe.message';
+import {
+    SEND_MESSAGE_EVENT,
+    TYPING_MESSAGE_EVENT,
+    READ_LAST_MESSAGE_EVENT,
+    UPLOAD_FILE_EVENT,
+    REMOVE_MESSAGE_EVENT,
+    MAKE_ACTION_MESSAGE_EVENT
+} from '../base-dto/base.event';
 
 @WebSocketGateway({
     cors: {
@@ -36,16 +45,22 @@ export class ChatGateway {
         }
     }
 
-    @SubscribeMessage('sendMessage')
+    /**
+     * Send message
+     * @param socket 
+     * @param payload 
+     * @returns 
+     */
+    @SubscribeMessage(SubscribeEvent.sendMessage)
     sendMessage(
         @ConnectedSocket() socket: Socket,
-        @MessageBody() payload: MessageRequest
-    ): Observable<WsResponse<MessageResponse>> {
+        @MessageBody() payload: TextRequest
+    ): Observable<WsResponse<TextRequest>> {
         return this.roomService.findOne(payload.roomId).pipe(
             mergeMap((room) => {
                 this.checkRoom(room, payload.userId);
                 this.messageService.onMessageFromSocket(payload);
-                return from([{ event: 'sendMessage', data: payload, userId: payload.userId }]);
+                return from([{ event: SEND_MESSAGE_EVENT, data: payload, userId: payload.userId }]);
             }),
             catchError((error) => {
                 socket.emit('error', error.message);
@@ -54,7 +69,10 @@ export class ChatGateway {
         );
     }
 
-    @SubscribeMessage('typingMessage')
+    /**
+     * Typing message
+     */
+    @SubscribeMessage(SubscribeEvent.typingMessage)
     typingMessage(
         @ConnectedSocket() socket: Socket,
         @MessageBody() payload: BaseRequest
@@ -62,7 +80,7 @@ export class ChatGateway {
         return this.roomService.findOne(payload.roomId).pipe(
             mergeMap((room) => {
                 this.checkRoom(room, payload.userId);
-                return from([{ event: 'typingMessage', data: payload, userId: payload.userId }]);
+                return from([{ event: TYPING_MESSAGE_EVENT, data: payload, userId: payload.userId }]);
             }),
             catchError((error) => {
                 socket.emit('error', error.message);
@@ -71,7 +89,13 @@ export class ChatGateway {
         );
     }
 
-    @SubscribeMessage('removeMessage')
+    /**
+     * Remove message
+     * @param socket 
+     * @param payload 
+     * @returns 
+     */
+    @SubscribeMessage(SubscribeEvent.removeMessage)
     removeMessage(
         @ConnectedSocket() socket: Socket,
         @MessageBody() payload: RemoveMessageRequest
@@ -80,7 +104,7 @@ export class ChatGateway {
             mergeMap((room) => {
                 this.checkRoom(room, payload.userId);
                 this.messageService.onRemoveMessageFromSocket(payload);
-                return from([{ event: 'removeMessage', data: payload, userId: payload.userId }]);
+                return from([{ event: REMOVE_MESSAGE_EVENT, data: payload, userId: payload.userId }]);
             }),
             catchError((error) => {
                 socket.emit('error', error.message);
@@ -89,7 +113,13 @@ export class ChatGateway {
         );
     }
 
-    @SubscribeMessage('readLastMessage')
+    /**
+     * Read last message
+     * @param socket 
+     * @param payload 
+     * @returns 
+     */
+    @SubscribeMessage(SubscribeEvent.readLastMessage)
     readLastMessage(
         @ConnectedSocket() socket: Socket,
         @MessageBody() payload: BaseRequest
@@ -98,7 +128,7 @@ export class ChatGateway {
             mergeMap((room) => {
                 this.checkRoom(room, payload.userId);
                 this.messageService.onReadLastMessageFromSocket(payload);
-                return from([{ event: 'readLastMessage', data: payload, userId: payload.userId }]);
+                return from([{ event: READ_LAST_MESSAGE_EVENT, data: payload, userId: payload.userId }]);
             }),
             catchError((error) => {
                 socket.emit('error', error.message);
@@ -107,8 +137,13 @@ export class ChatGateway {
         );
     }
 
-
-    @SubscribeMessage('uploadFile')
+    /**
+     * Upload file
+     * @param socket 
+     * @param payload 
+     * @returns 
+     */
+    @SubscribeMessage(SubscribeEvent.uploadFile)
     uploadFile(
         @ConnectedSocket() socket: Socket,
         @MessageBody() payload: UploadFileRequest
@@ -116,8 +151,37 @@ export class ChatGateway {
         return this.roomService.findOne(payload.roomId).pipe(
             mergeMap((room) => {
                 this.checkRoom(room, payload.userId);
-                this.messageService.onUploadFileFromSocket(payload);
-                return from([{ event: 'sendMessage', data: payload, userId: payload.userId }]);
+                return from(this.messageService.onUploadFileFromSocket(payload)).pipe(
+                    mergeMap(() => from([{ event: UPLOAD_FILE_EVENT, data: payload, userId: payload.userId }])),
+                    catchError((error) => {
+                        socket.emit('error', error.message);
+                        return EMPTY;
+                    }),
+                );
+            }),
+            catchError((error) => {
+                socket.emit('error', error.message);
+                return EMPTY;
+            }),
+        );
+    }
+
+    /**
+     * Make action
+     * @param socket 
+     * @param payload 
+     * @returns 
+     */
+    @SubscribeMessage(SubscribeEvent.makeAction)
+    makeAction(
+        @ConnectedSocket() socket: Socket,
+        @MessageBody() payload: MakeActionRequest
+    ): Observable<WsResponse<MakeActionRequest>> {
+        return this.roomService.findOne(payload.roomId).pipe(
+            mergeMap((room) => {
+                this.checkRoom(room, payload.userId);
+                this.messageService.onMakeActionMessageFromSocket(payload);
+                return from([{ event: MAKE_ACTION_MESSAGE_EVENT, data: payload, userId: payload.userId }]);
             }),
             catchError((error) => {
                 socket.emit('error', error.message);

@@ -6,6 +6,9 @@ import {
     UseGuards,
     UseInterceptors,
     UploadedFile,
+    ParseFilePipe,
+    MaxFileSizeValidator,
+    FileTypeValidator,
 } from '@nestjs/common';
 import { map, Observable } from 'rxjs';
 import { FileService } from './file.service';
@@ -22,7 +25,14 @@ export class FileController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @UseInterceptors(FileInterceptor('file'))
     uploadFile(
-        @UploadedFile() file,
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 1000 }),
+                    new FileTypeValidator({ fileType: 'image/jpeg' }),
+                ],
+            }),
+        ) file,
         @Res() res: Response
     ): Observable<Response> {
         return this.fileService.save(file).pipe(

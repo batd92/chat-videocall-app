@@ -55,12 +55,5 @@ UserSchema.pre<UserDocument>('save', async function (next) {
     next();
 });
 
-// Virtual for posts
-UserSchema.virtual('posts', {
-    ref: 'Post',
-    localField: '_id',
-    foreignField: 'createdBy',
-});
-
 export const createUserModel = (conn: Connection): Model<UserDocument> =>
     conn.model<UserDocument>('User', UserSchema, 'users');

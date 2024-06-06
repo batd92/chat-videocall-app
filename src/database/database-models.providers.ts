@@ -1,8 +1,6 @@
 import { Connection } from 'mongoose';
 import {
-    COMMENT_MODEL,
     DATABASE_CONNECTION,
-    POST_MODEL,
     USER_MODEL,
     FILE_MODEL,
     MESSAGE_MODEL,

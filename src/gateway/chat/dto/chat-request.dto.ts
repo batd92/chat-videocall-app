@@ -1,30 +1,37 @@
-import { IsNotEmpty, IsOptional, IsArray } from 'class-validator';
-import { TextContent, FileContent } from 'database/schemas/message.schema';
+import { IsNotEmpty, IsArray, ValidateNested, Min, IsNumber } from 'class-validator';
+import { TypeStorageFile, BaseRequest, ActionType } from 'gateway/base-dto/base.request';
 
-export class BaseRequest {
+export class TextRequest extends BaseRequest {
     @IsNotEmpty()
-    readonly userId: string;
-
-    @IsNotEmpty()
-    readonly roomId: string;
-
-    @IsOptional()
-    readonly replyFromId: string;
-
-    @IsNotEmpty()
-    readonly type: string;
+    readonly content: string;
 }
-export class MessageRequest extends BaseRequest {
-    @IsNotEmpty()
-    readonly content: TextContent;
-}
-
 export class RemoveMessageRequest extends BaseRequest {
     @IsNotEmpty()
     readonly messageId: string;
 }
-
 export class UploadFileRequest extends BaseRequest {
     @IsArray()
-    readonly files: FileContent[];
+    @ValidateNested()
+    files: FileRequest[];
+}
+export class FileRequest {
+    @IsNotEmpty()
+    url: string;
+
+    @IsNotEmpty()
+    type: TypeStorageFile;
+
+    @IsNotEmpty()
+    file_name: string;
+
+    @IsNumber()
+    @Min(5000)
+    size: number;
+}
+export class MakeActionRequest extends BaseRequest {
+    @IsNotEmpty()
+    action: number;
+
+    @IsNotEmpty()
+    type: ActionType;
 }

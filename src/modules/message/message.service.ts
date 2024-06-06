@@ -3,11 +3,12 @@ import { Model, Types } from 'mongoose';
 import { EMPTY, from, Observable, of } from 'rxjs';
 import { map, mergeMap, throwIfEmpty } from 'rxjs/operators';
 import { MESSAGE_MODEL } from '../../database/constants';
-import { CreateMessageDto, LINK, TEXT, VIDEO, FILE } from './dto/create-message.dto';
-import { FileContent, Message } from '../../database/schemas/message.schema';
+import { LINK, TEXT, VIDEO, FILE } from './dto/create-message.dto';
+import { Message } from '../../database/schemas/message.schema';
 import { QueryMessageDto } from './dto/query-message.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BaseRequest, MessageRequest, RemoveMessageRequest, UploadFileRequest } from 'gateway/chat/dto/chat-request.dto';
+import { TextRequest, RemoveMessageRequest, UploadFileRequest, MakeActionRequest } from 'gateway/chat/dto/chat-request.dto';
+import { BaseRequest } from 'gateway/base-dto/base.request';
 @Injectable({ scope: Scope.REQUEST })
 export class MessageService {
     constructor(
@@ -50,7 +51,7 @@ export class MessageService {
      * @param data 
      * @returns 
      */
-    async onMessageFromSocket(data: MessageRequest): Promise<void> {
+    async onMessageFromSocket(data: TextRequest): Promise<void> {
         const message: Message = await this.messageModel.create(this.buildMessageRequest(data));
         this.eventEmitter.emit('newMessage', message);
     }
@@ -80,12 +81,20 @@ export class MessageService {
     }
 
     /**
-     * Uplaod file on socket
+     * Upload file on socket
      * @param data 
      */
     async onUploadFileFromSocket(data: UploadFileRequest): Promise<void> {
-        const message: Message = await this.messageModel.create(this.buildFileRequest(data));
+        const message = await this.messageModel.create(this.buildFileRequest(data));
         this.eventEmitter.emit('uploadFile', message);
+    }
+
+    /**
+     * Make action
+     * @param data 
+     */
+    async onMakeActionMessageFromSocket(data: MakeActionRequest): Promise<void> {
+
     }
 
     /**
@@ -115,7 +124,7 @@ export class MessageService {
      * @param message 
      * @returns 
      */
-    buildMessageRequest(message: MessageRequest) {
+    buildMessageRequest(message: TextRequest) {
         return {
             content: message.content,
             roomId: message.roomId,
@@ -130,17 +139,14 @@ export class MessageService {
      * @param message 
      * @returns 
      */
-    buildFileRequest(message: UploadFileRequest) {
-        if (message.files) {
-            const contents = (message.files).map((file: FileContent) => file);
-            return {
-                content: contents,
-                roomId: message.roomId,
-                type: message.type,
-                userId: message.userId,
-                replyFromId: message.replyFromId || ''
-            }
-        }
+    private buildFileRequest(message: UploadFileRequest) {
+        return {
+            content: message.files,
+            roomId: message.roomId,
+            type: message.type,
+            userId: message.userId,
+            replyFromId: message.replyFromId || ''
+        };
     }
 
     /**
@@ -148,7 +154,7 @@ export class MessageService {
      * @param message 
      * @returns 
      */
-    buildVideoRequest(message: MessageRequest) {
+    buildCallVideoRequest(message: TextRequest) {
         return {
             content: message.content,
             roomId: message.roomId,

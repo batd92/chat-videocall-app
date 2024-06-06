@@ -1,14 +1,14 @@
 import { CanActivate, ExecutionContext, Injectable, Inject } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { JwtPayload } from '../interface/jwt-payload.interface';
-import { JwtStrategy } from '../strategy/jwt.strategy';
+import { JwtPayload } from '../../auth/interface/jwt-payload.interface';
+import { JwtStrategy } from '../../auth/strategy/jwt.strategy';
 import jwtConfig from '../../config/jwt.config';
 import { ConfigType } from '@nestjs/config';
-import { UserPrincipal } from '../interface/user-principal.interface';
+import { UserPrincipal } from '../../auth/interface/user-principal.interface';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
-export class WSJwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
+export class JwtAuthSocketGuardService extends AuthGuard('jwt') implements CanActivate {
     constructor(
         private readonly jwtStrategy: JwtStrategy,
         @Inject(jwtConfig.KEY) private readonly config: ConfigType<typeof jwtConfig>,

@@ -1,23 +1,12 @@
-import { IsNotEmpty, IsOptional, IsArray } from 'class-validator';
-import { TextContent, FileContent } from 'database/schemas/message.schema';
-export class MessageResponse {
-
-    @IsNotEmpty()
-    readonly content?: TextContent;
-
-    @IsNotEmpty()
+import { BaseResponse, FileResponse } from 'gateway/base-dto/base.response';
+export class TextResponse extends BaseResponse {
+    readonly content: string;
     readonly type: string;
+    readonly replyFrom: TextResponse
+}
 
-    @IsNotEmpty()
-    readonly roomId: string;
-
-    @IsNotEmpty()
-    readonly userId: string;
-
-    @IsOptional()
-    readonly replyFromId: string;
-
-    @IsArray()
-    @IsOptional()
-    readonly files?: FileContent[];
+export class FilesResponse extends BaseResponse {
+    readonly content: FileResponse[];
+    readonly type: string;
+    readonly replyFrom: TextResponse
 }

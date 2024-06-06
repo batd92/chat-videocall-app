@@ -5,8 +5,8 @@ import { RedisModule } from '../redis/redis.module';
 import { RedisPropagatorService } from './redis-propagator.service';
 
 @Module({
-  imports: [RedisModule],
-  providers: [RedisPropagatorService],
-  exports: [RedisPropagatorService],
+    imports: [RedisModule],
+    providers: [RedisPropagatorService],
+    exports: [RedisPropagatorService],
 })
-export class RedisPropagatorModule {}
+export class RedisPropagatorModule { }
