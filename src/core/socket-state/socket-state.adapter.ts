@@ -14,13 +14,15 @@ export interface AuthenticatedSocket extends Socket {
 }
 
 export class SocketStateAdapter extends IoAdapter implements WebSocketAdapter {
+    private readonly jwtAuthSocketGuardService: JwtAuthSocketGuardService;
+
     public constructor(
         private readonly app: INestApplicationContext,
         private readonly socketStateService: SocketStateService,
         private readonly redisPropagatorService: RedisPropagatorService,
-        private readonly jwtAuthSocketGuardService: JwtAuthSocketGuardService,
     ) {
         super(app);
+        this.jwtAuthSocketGuardService = this.app.get(JwtAuthSocketGuardService);
     }
 
     create(port: number, options?: ServerOptions): Server {
@@ -28,13 +30,19 @@ export class SocketStateAdapter extends IoAdapter implements WebSocketAdapter {
         this.redisPropagatorService.injectSocketServer(server);
 
         server.use(async (socket: AuthenticatedSocket, next) => {
-            console.log('authenticated socket ....');
-            const authToken = socket.handshake.query?.token[0] || socket.handshake.headers?.authorization;
+            try {
+                console.log('authenticated socket ....');
+                const authToken = socket.handshake.query?.token || socket.handshake.headers?.authorization;
 
-            if (!authToken) {
-                throw new UnauthorizedException(`Unauthorized exception`);
+                if (!authToken) {
+                    throw new UnauthorizedException(`Unauthorized exception`);
+                }
+                await this.jwtAuthSocketGuardService.canActivate(new ExecutionContextHost([socket]));
+                next();
+            } catch (error) {
+                console.log('errror : ', error)
             }
-            await this.jwtAuthSocketGuardService.canActivate(new ExecutionContextHost([socket]));
+
         });
 
         return server;

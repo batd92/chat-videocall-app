@@ -1,11 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { v4 } from 'uuid';
-
 import { ISocket, IUserameSocket, IRoomState, IUserSocket } from "./interface/socket";
 import { Socket } from "socket.io";
 import { VideoCallRequest } from "gateway/video-call/dto/video-call.request.dto";
 
-@Injectable()
 export class SocketStateService {
     // trạng thái socket by roomId
     private roomUsernameSockets = new Map<string, Array<IUserameSocket>>();

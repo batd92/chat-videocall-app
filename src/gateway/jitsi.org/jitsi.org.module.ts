@@ -1,14 +1,19 @@
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { UserService } from '../../modules/user/user.service'; // Đảm bảo đường dẫn chính xác
+import { ConfigModule } from '@nestjs/config'; // Import ConfigModule
 import { DatabaseModule } from '../../database/database.module';
 import { JitsiorgService } from './jitsi.org.service';
+import { UserModule } from '../../modules/user/user.module'; // Ensure the correct path
 
 @Module({
-    imports: [CacheModule.register(), DatabaseModule],
+    imports: [
+        UserModule,
+        ConfigModule,
+        DatabaseModule,
+        CacheModule.register(),
+    ],
     controllers: [],
-    providers: [JitsiorgService, UserService, ConfigService],
+    providers: [JitsiorgService],
     exports: [JitsiorgService],
 })
 export class JitsiorgModule { }

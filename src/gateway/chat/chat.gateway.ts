@@ -32,7 +32,10 @@ export class ChatGateway {
     constructor(
         private readonly roomService: RoomService,
         private readonly messageService: MessageService,
-    ) { }
+    ) {
+        console.log('RoomService:', this.roomService);  // Log to check injection
+        console.log('MessageService:', this.messageService);  // Log to check injection
+    }
 
     private checkRoom(room: Room, userId: string) {
         if (!room) {

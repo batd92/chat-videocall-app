@@ -8,8 +8,8 @@ import { pick } from '../../common/helper/file-helper'; // Đảm bảo đườn
 @Injectable({ scope: Scope.REQUEST })
 export class JitsiorgService {
     constructor(
-        private userService: UserService,
-        private configService: ConfigService
+        private readonly userService: UserService,
+        private readonly configService: ConfigService
     ) { }
 
     public async getInfoJitsi(request: JitsiorgRequest): Promise<{ token: string, roomName: string }> {

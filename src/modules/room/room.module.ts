@@ -1,33 +1,18 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../database/database.module';
 import { RoomController } from './room.controller';
 import { RoomService } from './room.service';
-import { CheckParticipantMiddleware } from 'common/middleware/room.middleware';
 import { MulterModule } from '@nestjs/platform-express';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ParticipantModule } from 'modules/participant/participant.module';
+
 @Module({
     imports: [
         DatabaseModule,
-        CacheModule.register(
-            {
-                ttl: 300, // 5m
-            }
-        ),
+        CacheModule.register(),
         MulterModule.register({ dest: './uploads' }),
-        ParticipantModule
     ],
     controllers: [RoomController],
-    providers: [RoomService, CheckParticipantMiddleware],
+    providers: [RoomService],
+    exports: [RoomService]
 })
-export class RoomModule implements NestModule {
-    configure(consumer: MiddlewareConsumer) {
-        consumer
-            .apply(CheckParticipantMiddleware)
-            .forRoutes(
-                { path: 'rooms/:id', method: RequestMethod.GET },
-                { path: 'rooms/:id', method: RequestMethod.PUT },
-                { path: 'rooms/:id', method: RequestMethod.DELETE },
-            );
-    }
-}
+export class RoomModule { }

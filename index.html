@@ -6,7 +6,7 @@
       socket.on('connect', function() {
         console.log('Connected');
 
-        socket.emit('joinRoom', { roomId: '12345', userId: '12' });
+        socket.emit('sendMessage', { roomId: '12345', userId: '12' });
         socket.emit('identity', 0, response =>
           console.log('Identity:', response),
         );

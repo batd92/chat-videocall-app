@@ -9,6 +9,7 @@ import { QueryMessageDto } from './dto/query-message.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TextRequest, RemoveMessageRequest, UploadFileRequest, MakeActionRequest } from 'gateway/chat/dto/chat-request.dto';
 import { BaseRequest } from 'gateway/base-dto/base.request';
+
 @Injectable({ scope: Scope.REQUEST })
 export class MessageService {
     constructor(

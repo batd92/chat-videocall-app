@@ -17,8 +17,10 @@ import { Message } from 'database/schemas/message.schema';
 export class RoomService {
     constructor(
         @Inject(ROOM_MODEL) private roomModel: Model<Room>,
-        @Inject(CACHE_MANAGER) private cacheManager: Cache,
+        
         @Inject(PARTICIPANT_MODEL) private participantModel: Model<Participant>,
+
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
         private readonly eventEmitter: EventEmitter2,
     ) {
         this.eventEmitter.on('newMessage', (message: Message) => this.onNewMessageInRoom(message));

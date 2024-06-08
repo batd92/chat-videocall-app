@@ -1,4 +1,4 @@
-import { UseInterceptors, OnModuleInit, NotFoundException, UnauthorizedException, BadGatewayException, ForbiddenException } from '@nestjs/common';
+import { UseInterceptors, OnModuleInit, NotFoundException, UnauthorizedException, BadGatewayException, ForbiddenException, Inject } from '@nestjs/common';
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
 import { Observable, from, mergeMap, catchError, EMPTY, of } from 'rxjs';
 import { Server, Socket } from 'socket.io';
@@ -28,9 +28,9 @@ export class VideoCallGateway {
     @WebSocketServer() server: Server;
 
     constructor(
-        private readonly socketStateService: SocketStateService,
         private readonly roomService: RoomService,
         private readonly jitsiorgService: JitsiorgService,
+        private readonly socketStateService: SocketStateService,
     ) { }
 
     /**
