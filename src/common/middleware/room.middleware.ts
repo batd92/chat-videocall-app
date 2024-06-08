@@ -1,5 +1,4 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Inject, Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Response, NextFunction } from 'express';
 import { Participant } from '../../database/schemas/participant.schema';
@@ -9,7 +8,7 @@ import { PARTICIPANT_MODEL } from 'database/constants';
 @Injectable()
 export class CheckParticipantMiddleware implements NestMiddleware {
     constructor(
-        @InjectModel(PARTICIPANT_MODEL) private participantModel: Model<Participant>
+        @Inject(PARTICIPANT_MODEL) private participantModel: Model<Participant>
     ) { }
 
     async use(req: AuthenticatedRequest, res: Response, next: NextFunction) {

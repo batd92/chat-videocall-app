@@ -17,6 +17,7 @@ import {
     REMOVE_MESSAGE_EVENT,
     MAKE_ACTION_MESSAGE_EVENT
 } from '../base-dto/base.event';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @WebSocketGateway({
     cors: {
@@ -144,6 +145,7 @@ export class ChatGateway {
      * @returns 
      */
     @SubscribeMessage(SubscribeEvent.uploadFile)
+    @UseInterceptors(FileInterceptor('file'))
     uploadFile(
         @ConnectedSocket() socket: Socket,
         @MessageBody() payload: UploadFileRequest

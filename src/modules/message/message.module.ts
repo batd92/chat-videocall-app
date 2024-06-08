@@ -4,11 +4,13 @@ import { MessageController } from './message.controller';
 import { MessageService } from './message.service';
 import { LoggerMiddleware } from '../../common/middleware/logger.middleware';
 import { AuthMiddleware } from '../../common/middleware/auth.middleware';
+import { EventEmitterModule } from '@nestjs/event-emitter'; 
 
 @Module({
-    imports: [DatabaseModule],
+    imports: [DatabaseModule, EventEmitterModule.forRoot()],
     controllers: [MessageController],
     providers: [MessageService],
+    exports: [MessageService],
 })
 export class MessageModule implements NestModule {
     configure(consumer: MiddlewareConsumer): void {

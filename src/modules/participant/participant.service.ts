@@ -1,5 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { from, Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -10,7 +9,7 @@ import { PARTICIPANT_MODEL } from 'database/constants';
 @Injectable()
 export class ParticipantService {
     constructor(
-        @InjectModel(PARTICIPANT_MODEL) private readonly participantModel: Model<ParticipantDocument>,
+        @Inject(PARTICIPANT_MODEL) private readonly participantModel: Model<ParticipantDocument>,
         private readonly eventEmitter: EventEmitter2
     ) {
         this.eventEmitter.on('roomDeleted', (roomId: string) => this.delete(roomId));

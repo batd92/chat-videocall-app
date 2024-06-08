@@ -1,17 +1,16 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
-import { MulterConfigService } from '../../common/file/multer-config.service';
 import { VideoCallGateway } from './video-call.gateway';
 import { MessageService } from '../../modules/message/message.service';
 import { RoomService } from '../../modules/room/room.service';
+import { JitsiorgModule } from '../jitsi.org/jitsi.org.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
     imports: [
-        MulterModule.registerAsync({
-            useClass: MulterConfigService,
-            inject: ['CHAT'],
-        })
+        JitsiorgModule,
+        MulterModule.register({ dest: './uploads' }),
     ],
-    providers: [VideoCallGateway, MessageService, RoomService],
+    providers: [],
 })
-export class ChatModule { }
+export class VideoCallModule { }

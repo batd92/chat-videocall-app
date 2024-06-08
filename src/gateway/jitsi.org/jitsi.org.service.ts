@@ -2,8 +2,8 @@ import { Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { JitsiorgRequest } from './dto/jitsiorg.dto';
 import { UserService } from '../../modules/user/user.service';
 import * as jwt from 'jsonwebtoken';
-import { ConfigService } from '@nestjs/config'; // Import ConfigService
-import { pick } from 'common/helper/file-helper';
+import { ConfigService } from '@nestjs/config';
+import { pick } from '../../common/helper/file-helper'; // Đảm bảo đường dẫn chính xác
 
 @Injectable({ scope: Scope.REQUEST })
 export class JitsiorgService {
@@ -24,7 +24,7 @@ export class JitsiorgService {
             },
             aud: this.configService.get('JWT_APP_ID'),
             iss: this.configService.get('JWT_APP_ID'),
-            sub: this.configService.get('SUB_DOMAIN'), //"example.video.com",
+            sub: this.configService.get('SUB_DOMAIN'),
             room: request.roomId
         }, this.configService.get('JWT_SECRET'), {
             header: {

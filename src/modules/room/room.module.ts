@@ -4,8 +4,8 @@ import { RoomController } from './room.controller';
 import { RoomService } from './room.service';
 import { CheckParticipantMiddleware } from 'common/middleware/room.middleware';
 import { MulterModule } from '@nestjs/platform-express';
-import { MulterConfigService } from '../../common/file/multer-config.service';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ParticipantModule } from 'modules/participant/participant.module';
 @Module({
     imports: [
         DatabaseModule,
@@ -14,13 +14,11 @@ import { CacheModule } from '@nestjs/cache-manager';
                 ttl: 300, // 5m
             }
         ),
-        MulterModule.registerAsync({
-            useClass: MulterConfigService,
-            inject: ['ROOM'],
-        })
+        MulterModule.register({ dest: './uploads' }),
+        ParticipantModule
     ],
     controllers: [RoomController],
-    providers: [RoomService],
+    providers: [RoomService, CheckParticipantMiddleware],
 })
 export class RoomModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {

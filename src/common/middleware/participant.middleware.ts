@@ -1,5 +1,4 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Inject, Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Response, NextFunction } from 'express';
 import { Room } from '../../database/schemas/room.schema';
@@ -9,7 +8,7 @@ import { ROOM_MODEL } from 'database/constants';
 @Injectable()
 export class CheckOwnerMiddleware implements NestMiddleware {
     constructor(
-        @InjectModel(ROOM_MODEL) private roomModel: Model<Room>
+        @Inject(ROOM_MODEL) private roomModel: Model<Room>
     ) { }
 
     async use(req: AuthenticatedRequest, res: Response, next: NextFunction) {

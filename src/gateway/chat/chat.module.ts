@@ -1,17 +1,18 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
-import { MulterConfigService } from '../../common/file/multer-config.service';
 import { ChatGateway } from './chat.gateway';
 import { MessageService } from '../../modules/message/message.service';
 import { RoomService } from '../../modules/room/room.service';
+import { RoomModule } from '../../modules/room/room.module';
+import { MessageModule } from '../../modules/message/message.module';
 
 @Module({
     imports: [
-        MulterModule.registerAsync({
-            useClass: MulterConfigService,
-            inject: ['CHAT'],
-        })
+        RoomModule,
+        MessageModule,
+        MulterModule.register({ dest: './uploads' })
+
     ],
-    providers: [ChatGateway, MessageService, RoomService],
+    providers: [],
 })
 export class ChatModule { }
