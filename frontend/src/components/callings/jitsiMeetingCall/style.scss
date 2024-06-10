@@ -1,0 +1,14 @@
+.jitsi-modal {
+    width: 80vw !important;
+    height: 80vh !important;
+
+    .ant-modal-content {
+        padding: 0;
+        height: 100%;
+
+        .ant-modal-body {
+            height: 100%;
+        }
+    }
+
+}

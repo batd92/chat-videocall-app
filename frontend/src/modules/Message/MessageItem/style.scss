@@ -1,0 +1,85 @@
+.c-message-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  position: relative;
+
+  &--active {
+    background-color: #eee;
+  }
+
+  &:hover {
+    background-color: #eee;
+
+    .tools {
+      display: block;
+    }
+  }
+
+  .tools {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 20px;
+    padding-right: 20px;
+
+    .more-action {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #eee;
+      background-color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+  }
+
+  .right {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+
+      .time {
+        font-size: 12px;
+      }
+    }
+
+    .bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .contact-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .divider {
+      padding: 0 4px;
+    }
+
+    .bottom {
+      display: flex;
+
+      .summary {
+        font-size: 13px;
+        color: #65676b;
+      }
+
+      .summary__unread {
+        font-weight: 600;
+        color: #434343;
+      }
+    }
+  }
+}

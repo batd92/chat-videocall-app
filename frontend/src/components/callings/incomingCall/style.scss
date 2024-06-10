@@ -1,0 +1,45 @@
+.incoming-call-card {
+
+    .group {
+        .avatar {
+            height: 70px;
+            width: 70px;
+        }
+
+        .name {
+            margin-top: 0;
+        }
+    }
+
+    .not-group {
+        .avatar {
+            height: 100px;
+            width: 100px;
+        }
+
+        .name {
+            margin-top: 0;
+        }
+    }
+
+
+}
+
+.incoming-call-modal {
+    .ant-modal-content {
+        width: 350px;
+
+        .ant-modal-body {
+            text-align: center;
+
+            min-height: 150px;
+        }
+    }
+
+}
+
+.incoming-call-card-footer {
+    margin-top: 32px;
+    justify-content: space-around;
+    display: flex;
+}

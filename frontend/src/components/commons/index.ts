@@ -1,0 +1,5 @@
+export * from './AvatarWrap'
+export * from './AvatarGroupWrap'
+export * from './SpinWrap'
+export * from './TooltipWrap'
+export * from './UploadWrap'

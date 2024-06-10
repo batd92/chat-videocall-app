@@ -1,0 +1,45 @@
+{
+  "name": "mnc2vi",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "bash render-fb.sh && next dev",
+    "build": "bash render-fb.sh && next build",
+    "start": "sh render-fb.sh && next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.2.6",
+    "@ant-design/moment-webpack-plugin": "^0.0.4",
+    "@jitsi/react-sdk": "^1.4.0",
+    "antd": "^5.12.4",
+    "axios": "^1.6.2",
+    "clsx": "^2.0.0",
+    "emoji-picker-react": "^4.6.5",
+    "firebase": "^10.7.1",
+    "js-cookie": "^3.0.5",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "next": "14.0.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-infinite-scroll-component": "^6.1.0",
+    "react-linkify": "^1.0.0-alpha",
+    "react-query": "^3.39.3",
+    "react-use-websocket": "^4.5.0",
+    "sass": "^1.69.5",
+    "simple-peer": "^9.11.1"
+  },
+  "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
+    "@types/lodash": "^4.14.202",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/react-linkify": "^1.0.4",
+    "@types/simple-peer": "^9.11.8",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
+    "typescript": "^5"
+  }
+}

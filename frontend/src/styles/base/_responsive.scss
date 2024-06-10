@@ -1,0 +1,37 @@
+$SM: 640px;
+$MD: 768px;
+$LG: 1024px;
+$XL: 1280px;
+$XXL: 1536px;
+
+@mixin Responsive($screen) {
+    @if $screen==SM {
+        @media only screen and (min-width: $SM) {
+            @content;
+        }
+    }
+
+    @if $screen==MD {
+        @media only screen and (min-width: $MD) {
+            @content;
+        }
+    }
+
+    @if $screen==LG {
+        @media only screen and (min-width: $LG) {
+            @content;
+        }
+    }
+
+    @if $screen==XL {
+        @media only screen and (min-width: $XL) {
+            @content;
+        }
+    }
+
+    @else if $screen==XXL {
+        @media only screen and (min-width: $XXL) {
+            @content;
+        }
+    }
+}

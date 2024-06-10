@@ -1,0 +1,63 @@
+.message {
+  width: 100%;
+  position: relative;
+
+  .message-reply {
+    width: 100%;
+    position: relative;
+    padding-bottom: 8px;
+    background: #fafafa;
+    border-radius: 8px;
+    cursor: default;
+
+     > div {
+      background-color: transparent !important;
+     }
+
+     .ant-image {
+      height: 100px !important;
+     }
+
+    .message {
+      color: #a1a1aa;
+      opacity: 0.8;
+      font-size: 12px;
+      white-space: pre;
+      --line-clamp: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: var(--line-clamp);
+      -webkit-box-orient: vertical;
+      width: 100%;
+
+      a {
+        color: #a1a1aa !important;
+        pointer-events: none;
+      }
+    }
+
+    .doc__content {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      gap: 4px;
+    }
+  }
+
+  .message-reply-media {
+    padding: 0;
+    background: transparent;
+
+    .media-content {
+      display: block !important;
+      height: fit-content;
+      opacity: 0.5;
+    }
+  }
+
+  .message-target {
+    position: relative;
+    top: -14px;
+  }
+}

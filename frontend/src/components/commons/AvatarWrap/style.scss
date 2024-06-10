@@ -1,0 +1,19 @@
+.avatar-wrap {
+  position: relative;
+
+  .profile-picture {
+    object-fit: contain;
+    border-radius: 50%;
+  }
+
+  .status-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 30px;
+    width: 10px;
+    height: 10px;
+    background-color: var(--color-green-1);
+    border: 2px solid var(--color-white);
+    border-radius: 50%;
+  }
+}
