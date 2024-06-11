@@ -15,20 +15,20 @@ export class ParticipantDataInitializerService implements OnModuleInit {
 
     async onModuleInit(): Promise<void> {
         console.log('(ParticipantDataInitializerService) is initialized...');
-        await this.participantModel.deleteMany({});
+        // await this.participantModel.deleteMany({});
 
-        const users = await this.userModel.find().exec();
-        const rooms = await this.roomModel.find().exec();
+        // const users = await this.userModel.find().exec();
+        // const rooms = await this.roomModel.find().exec();
 
-        const participants = rooms.flatMap(room => {
-            return users.map(user => ({
-                roomId: room._id,
-                userId: user._id,
-                indexMessageRead: 0
-            }));
-        });
+        // const participants = rooms.flatMap(room => {
+        //     return users.map(user => ({
+        //         roomId: room._id,
+        //         userId: user._id,
+        //         indexMessageRead: 0
+        //     }));
+        // });
 
-        await this.participantModel.insertMany(participants);
+        // await this.participantModel.insertMany(participants);
         console.log('Participants created.');
     }
 }

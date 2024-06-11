@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsOptional, IsArray } from 'class-validator';
-import { TextContent, NotifyContent, VideoCallContent, FileContent } from 'database/schemas/message.schema';
+import { TextContent, NotifyContent, VideoCallContent, FileContent } from '../../../database/schemas/message.schema';
 export class CreateMessageDto {
 
     @IsNotEmpty()

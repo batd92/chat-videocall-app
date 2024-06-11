@@ -12,8 +12,8 @@ export class ProfileController {
 
     @UseGuards(JwtAuthGuard)
     @Get('profile')
-    getProfile(@Req() req: Request): Observable<Partial<User>> {
+    getProfile(@Req() req: Request):  Observable<{ data: Partial<User>; status: string }> {
         const user = req.user as { username: string };
-        return this.userService.findByUsername(user.username);
+        return this.userService.findByAuthReq(user.username);
     }
 }

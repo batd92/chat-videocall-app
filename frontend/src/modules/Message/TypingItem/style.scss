@@ -1,17 +1,17 @@
 .c-typing-item {
-  display: flex;
-  gap: 10px;
-
-  .left {
     display: flex;
-    flex-direction: column;
-  }
+    gap: 10px;
 
-  .right {
-    display: flex;
-    align-items: center;
-    background-color: #eee;
-    border-radius: 18px;
-    padding: 0 10px;
-  }
+    .left {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .right {
+        display: flex;
+        align-items: center;
+        background-color: #eee;
+        border-radius: 18px;
+        padding: 0 10px;
+    }
 }

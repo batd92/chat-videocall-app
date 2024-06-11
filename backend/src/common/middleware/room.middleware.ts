@@ -3,7 +3,7 @@ import { Model } from 'mongoose';
 import { Response, NextFunction } from 'express';
 import { Participant } from '../../database/schemas/participant.schema';
 import { AuthenticatedRequest } from '../../auth/interface/authenticated-request.interface';
-import { PARTICIPANT_MODEL } from 'database/constants';
+import { PARTICIPANT_MODEL } from '../../database/constants';
 
 @Injectable()
 export class CheckParticipantMiddleware implements NestMiddleware {

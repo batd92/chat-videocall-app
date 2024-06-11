@@ -13,7 +13,7 @@ export class Room {
     @Prop({ required: true, default: false })
     isGroup: boolean;
 
-    @Prop({ required: true })
+    @Prop({ required: true, index: true })
     name: string;
 
     @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
@@ -35,7 +35,7 @@ export class Room {
     avatarUrl: string;
 
     @Prop({ type: [{ type: SchemaTypes.ObjectId, ref: 'Participant' }] })
-    participants?: Partial<Participant>[];
+    participants: Partial<Participant>[];
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);

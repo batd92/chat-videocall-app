@@ -7,7 +7,7 @@ import { ServerOptions } from 'socket.io';
 import { RedisPropagatorService } from '../redis-propagator/redis-propagator.service';
 import { SocketStateService } from './socket-state.service';
 import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-host';
-import { JwtAuthSocketGuardService } from 'core/guard/jwt-auth-soket.service';
+import { JwtAuthSocketGuardService } from '../guard/jwt-auth-soket.service';
 
 export interface AuthenticatedSocket extends Socket {
     auth: UserPrincipal;

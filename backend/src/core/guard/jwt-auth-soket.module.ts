@@ -3,7 +3,7 @@ import { ConfigModule, ConfigType } from '@nestjs/config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { JwtAuthSocketGuardService } from './jwt-auth-soket.service';
 import jwtConfig from '../../config/jwt.config';
-import { JwtStrategy } from 'auth/strategy/jwt.strategy';
+import { JwtStrategy } from '../../auth/strategy/jwt.strategy';
 
 @Module({
     imports: [

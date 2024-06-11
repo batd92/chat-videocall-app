@@ -5,7 +5,7 @@ import { MessageService } from './message.service';
 import { LoggerMiddleware } from '../../common/middleware/logger.middleware';
 import { AuthMiddleware } from '../../common/middleware/auth.middleware';
 import { EventEmitterModule } from '@nestjs/event-emitter'; 
-import { MessageDataInitializerService } from 'initializers/message.initializer';
+import { MessageDataInitializerService } from '../../initializers/message.initializer';
 
 @Module({
     imports: [DatabaseModule, EventEmitterModule.forRoot()],

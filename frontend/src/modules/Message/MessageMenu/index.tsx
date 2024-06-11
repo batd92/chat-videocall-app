@@ -35,7 +35,7 @@ interface IProps {
   avatar: React.ReactNode
   name: string | undefined
   status: React.ReactNode
-  conversationDetail: IGetRoomResponse
+  roomDetail: IGetRoomResponse
   setRoomDetailLocal: (data: IGetRoomResponse) => void
   refresh?: () => void
   handleRedirectSearch: (e: any) => void
@@ -47,7 +47,7 @@ const MessageMenu: React.FC<IProps> = ({
   avatar,
   name,
   status,
-  conversationDetail,
+  roomDetail,
   setRoomDetailLocal,
   refresh,
   handleRedirectSearch,
@@ -78,7 +78,7 @@ const MessageMenu: React.FC<IProps> = ({
     isLoading: searchMsgLoading,
   } = useQuery(
     [ENDPOINT.MESSAGE.GET_MESSAGES, params.keyword],
-    () => MessageService.getMessages({ id: conversationDetail._id, params }),
+    () => MessageService.getMessages({ id: roomDetail._id, params }),
     {
       enabled: params.keyword !== '',
       onSuccess: (response: any) => {
@@ -117,7 +117,7 @@ const MessageMenu: React.FC<IProps> = ({
     }
   }
   const items: CollapseProps['items'] = useMemo(() => {
-    if (!conversationDetail?._id) return []
+    if (!roomDetail?._id) return []
     let temp: CollapseProps['items'] = [
       {
         key: '3',
@@ -140,7 +140,7 @@ const MessageMenu: React.FC<IProps> = ({
         ),
       }
     ]
-    if (conversationDetail?.isGroup) {
+    if (roomDetail?.isGroup) {
       temp = [
         {
           key: '1',
@@ -152,7 +152,7 @@ const MessageMenu: React.FC<IProps> = ({
                 <span>Rename the chat</span>
               </Button>
               <UploadAvatar
-                conversationDetail={conversationDetail}
+                roomDetail={roomDetail}
                 setRoomDetailLocal={setRoomDetailLocal}
               />
             </div>
@@ -163,7 +163,7 @@ const MessageMenu: React.FC<IProps> = ({
           label: 'Member in the chat',
           children: (
             <div className='list-button'>
-              {conversationDetail?.participants?.map((participant: any) => (
+              {roomDetail?.participants?.map((participant: any) => (
                 <div className='list-member' key={participant._id}>
                   <AvatarWrap
                     size={42}
@@ -216,7 +216,7 @@ const MessageMenu: React.FC<IProps> = ({
     }
 
     return temp
-  }, [conversationDetail, setRoomDetailLocal])
+  }, [roomDetail, setRoomDetailLocal])
 
   const handleOkNewRoomModal = () => {
     setIsUpdateName(false)
@@ -235,7 +235,7 @@ const MessageMenu: React.FC<IProps> = ({
           key={`mgs_${indexGroup}`}
           onClick={() => handleRedirectSearch(messageGroup)}
         >
-          {conversationDetail?.participants?.map((participant: any) => (
+          {roomDetail?.participants?.map((participant: any) => (
             <div key={participant._id}>
               {messageGroup.userId === participant._id && (
                 <div>
@@ -338,14 +338,14 @@ const MessageMenu: React.FC<IProps> = ({
             isUpdateName={isUpdateName}
             isUpdateMember={isAddMembers}
             setRoomDetailLocal={setRoomDetailLocal}
-            conversationDetail={conversationDetail}
+            roomDetail={roomDetail}
             refresh={refresh}
           />}
         </>
       ) : (
         <MediaContainer
           activeKey={mediaActivedKey}
-          list={conversationDetail.fileStorages}
+          list={roomDetail.fileStorages}
           onChangeKey={setMediaActivedKey}
         />
       )}

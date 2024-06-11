@@ -12,7 +12,7 @@ import { ParticipantModule } from './modules/participant/participant.module';
 import { RoomModule } from './modules/room/room.module';
 import { ChatModule } from './gateway/chat/chat.module';
 import { VideoCallModule } from './gateway/video-call/video-call.module';
-import { JitsiorgModule } from 'gateway/jitsi.org/jitsi.org.module';
+import { JitsiorgModule } from './gateway/jitsi.org/jitsi.org.module';
 
 @Module({
     imports: [

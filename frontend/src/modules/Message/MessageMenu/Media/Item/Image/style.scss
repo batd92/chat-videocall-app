@@ -1,58 +1,59 @@
 .media-content {
-  height: 100%;
-
-  .media-item__listImg {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  
-    & img {
-      width: 100%;
-      height: 112px !important;
-    }
-  
-    &__item {
-      max-width: 1000%;
-      display: flex;
-      align-items: flex-start;
-      gap: 4px;
-      position: relative;
-      flex-direction: column;
-  
-      &:hover {
-        .options,
-        .options_receive {
-          display: flex;
-        }
-      }
-  
-      .options {
-        display: none;
-        cursor: pointer;
-        position: absolute;
-        padding: 4px;
-        top: 4px;
-        right: 4px;
-        width: 14px;
-        height: 14px;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: #ccc;
-  
-        & span {
-          margin: 0;
-        }
-      }
-    }
-  }
-  
-  .no-data {
     height: 100%;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+
+    .media-item__listImg {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+
+        & img {
+            width: 100%;
+            height: 112px !important;
+        }
+
+        &__item {
+            max-width: 1000%;
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+            position: relative;
+            flex-direction: column;
+
+            &:hover {
+
+                .options,
+                .options_receive {
+                    display: flex;
+                }
+            }
+
+            .options {
+                display: none;
+                cursor: pointer;
+                position: absolute;
+                padding: 4px;
+                top: 4px;
+                right: 4px;
+                width: 14px;
+                height: 14px;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background: #ccc;
+
+                & span {
+                    margin: 0;
+                }
+            }
+        }
+    }
+
+    .no-data {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 }

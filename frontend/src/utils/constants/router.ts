@@ -1,11 +1,11 @@
 export const APP_ROUTER = {
-  AUTH: {
-    LOGIN: '/login',
-  },
+    AUTH: {
+        LOGIN: '/login',
+    },
 
-  MESSAGE: {
-    CHAT_EMPTY: '/t',
-    CHAT_DETAIL: '/t/:id',
-    CHAT_NEW: '/t/new',
-  },
+    MESSAGE: {
+        CHAT_EMPTY: '/home',
+        CHAT_DETAIL: '/home/:id',
+        CHAT_NEW: '/home/new',
+    },
 }

@@ -13,7 +13,8 @@ import {
     NotFoundException,
     ParseFilePipe,
     MaxFileSizeValidator,
-    FileTypeValidator
+    FileTypeValidator,
+    Req
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { RoomService } from './room.service';
@@ -36,35 +37,38 @@ export class RoomController {
     constructor(private readonly roomService: RoomService) { }
 
     @Get()
-    getRooms(@Query('search') search: string): Observable<{ rooms: Room[], lastRecord: string | null }> {
+    getRooms(@Query('keyword') search: string): Observable<{ rooms: Room[], lastRecord: string | null }> {
         return this.roomService.getRooms(search);
     }
 
     @Get(':id')
-    getRoomById(@Param('id', ParseObjectIdPipe) id: string): Observable<ResRoomDto> {
+    getRoomById(@Param('id', ParseObjectIdPipe) id: string): Observable<{ room: ResRoomDto }> {
         return this.roomService.findById(id);
     }
 
     @Post()
     async createRoom(
         @Body() createRoomDto: CreateRoomDto,
+        @Req() req: Request
     ): Promise<Room> {
-        return this.roomService.save(createRoomDto);
+        const user = req['user'];
+        const userId = user.id; 
+        return this.roomService.save(createRoomDto, userId);
     }
 
-    @Put(':id')
+    @Put(':id/invites')
     inviteUserIntoRoom(
         @Param('id', ParseObjectIdPipe) id: string,
         @Body() inviteUserDto: InviteUserDto,
-    ): Promise<Room> {
+    ): Promise<{room: Room}> {
         return this.roomService.inviteUserIntoRoom(id, inviteUserDto);
     }
 
-    @Put(':id')
+    @Put(':id/name')
     updateNameOfRoom(
         @Param('id', ParseObjectIdPipe) id: string,
         @Body() changeRoomNameDto: ChangeRoomNameDto,
-    ): Promise<Room> {
+    ): Promise<{ room: Room}> {
         return this.roomService.updateNameOfRoom(id, changeRoomNameDto);
     }
 
@@ -73,17 +77,17 @@ export class RoomController {
         return this.roomService.delete(id);
     }
 
-    @Post(':id/avatar')
+    @Put(':id/avatar')
     @UseInterceptors(FileInterceptor('file'))
     uploadFile(
         @Param('id', ParseObjectIdPipe) id: string,
         @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({ maxSize: 1000 }),
-                    new FileTypeValidator({ fileType: 'image/jpeg' }),
-                ],
-            }),
+            // new ParseFilePipe({
+            //     validators: [
+            //         new MaxFileSizeValidator({ maxSize: 9000 }),
+            //         new FileTypeValidator({ fileType: 'image/jpeg' }),
+            //     ],
+            // }),
         ) file?: Express.Multer.File,
     ) {
         return this.roomService.updateAvatar(id, file);

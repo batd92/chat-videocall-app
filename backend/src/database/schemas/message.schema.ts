@@ -6,7 +6,7 @@ export class VideoCallContent {
     @Prop({ required: true })
     roomName: string;
 
-    @Prop({ required: true, default: StatusJitsiMeet.INCOMING })
+    @Prop({ required: true, type: String, enum: StatusJitsiMeet })
     status: StatusJitsiMeet;
 
     @Prop({ required: true })
@@ -20,7 +20,7 @@ export class FileContent {
     @Prop({ required: true })
     url: string;
 
-    @Prop({ required: true, enum: TypeStorageMessage })
+    @Prop({ required: true, enum: TypeStorageMessage, type: String })
     type: TypeStorageMessage;
 
     @Prop({ required: true })
@@ -46,7 +46,7 @@ export enum ActionType {
 }
 export class Action {
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    userId: MongooseSchema.Types.ObjectId;
+    userId: string;
 
     @Prop({ required: true, enum: ActionType })
     type: ActionType;
@@ -57,28 +57,25 @@ export class Action {
 
 export type MessageDocument = Message & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true,  })
 export class Message {
-    @Prop({ type: SchemaTypes.ObjectId, required: true })
-    _id: MongooseSchema.Types.ObjectId;
+    @Prop({ type: SchemaTypes.ObjectId, auto: true })
+    _id: string;
 
     @Prop({ type: SchemaTypes.ObjectId, ref: 'Room', required: true })
-    roomId: MongooseSchema.Types.ObjectId;
+    roomId: string;
 
     @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
-    userId: MongooseSchema.Types.ObjectId;
+    userId: string;
 
     @Prop({ type: SchemaTypes.ObjectId, ref: 'Message', required: false })
-    replyFromId: MongooseSchema.Types.ObjectId;
+    replyFromId: string;
 
     @Prop({ required: true, type: MongooseSchema.Types.Mixed })
     content: TextContent | NotifyContent | VideoCallContent | FileContent[];
 
-    @Prop({ required: true, enum: TypeMessage })
+    @Prop({ required: true, enum: TypeMessage, type: String })
     type: TypeMessage;
-
-    @Prop({ required: true, default: 0 })
-    deletedAt: number;
 
     @Prop({ type: SchemaTypes.ObjectId, ref: 'Message' })
     messageRepy?: Message;
@@ -90,6 +87,6 @@ export class Message {
 export const MessageSchema = SchemaFactory.createForClass(Message);
 
 MessageSchema.pre(['find', 'findOne'], function (next) {
-    this.populate('userId').populate('messageReply');
+    this.populate('userId').populate({ path: 'messageReply', options: { strictPopulate: false } });
     next();
 });

@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
-import { TextContent, NotifyContent, VideoCallContent, FileContent } from 'database/schemas/message.schema';
+import { TextContent, NotifyContent, VideoCallContent, FileContent } from '../../../database/schemas/message.schema';
 
 class MessageDto {
     readonly content: TextContent | NotifyContent | VideoCallContent | FileContent[];

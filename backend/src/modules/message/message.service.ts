@@ -1,14 +1,14 @@
 import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
-import { EMPTY, from, Observable, of } from 'rxjs';
-import { map, mergeMap, throwIfEmpty } from 'rxjs/operators';
+import { EMPTY, from, Observable, of, throwError } from 'rxjs';
+import { catchError, map, mergeMap, throwIfEmpty } from 'rxjs/operators';
 import { MESSAGE_MODEL } from '../../database/constants';
 import { LINK, TEXT, VIDEO, FILE } from './dto/create-message.dto';
 import { Message } from '../../database/schemas/message.schema';
 import { QueryMessageDto } from './dto/query-message.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { TextRequest, RemoveMessageRequest, UploadFileRequest, MakeActionRequest } from 'gateway/chat/dto/chat-request.dto';
-import { BaseRequest } from 'gateway/base-dto/base.request';
+import { TextRequest, RemoveMessageRequest, UploadFileRequest, MakeActionRequest } from '../../gateway/chat/dto/chat-request.dto';
+import { BaseRequest } from '../../gateway/base-dto/base.request';
 
 @Injectable({ scope: Scope.REQUEST })
 export class MessageService {
@@ -19,16 +19,14 @@ export class MessageService {
 
     }
 
-    findAll(inquery: QueryMessageDto): Observable<Message[]> {
-        let query = this.messageModel.find();
-
+    findAll(inquery: QueryMessageDto, roomId: string): Observable<{ data: Partial<Message[]>; status: string }> {
+        let query = this.messageModel.find({ roomId });
         if (inquery.keyword) {
             query = query.where('title').regex(new RegExp('.*' + inquery.keyword + '.*', 'i'));
         }
 
         if (inquery.next_cursor) {
             const cursor = (new Types.ObjectId(inquery.next_cursor)).getTimestamp().getTime();
-            if (inquery.isJumpToMessages) query = query.where('_id').gte(cursor);
             query = query.where('_id').lt(cursor);
         }
 
@@ -37,6 +35,9 @@ export class MessageService {
                 .skip(inquery.skip)
                 .limit(inquery.limit)
                 .exec(),
+        ).pipe(
+            map(data => ({ data, status: 'ok' })),
+            catchError(error => throwError(error))
         );
     }
 

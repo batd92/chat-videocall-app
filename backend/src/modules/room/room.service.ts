@@ -1,7 +1,7 @@
-import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { Participant } from 'database/schemas/participant.schema';
 import { Model } from 'mongoose';
-import { EMPTY, from, Observable, of, switchMap } from 'rxjs';
+import { EMPTY, from, Observable, of, switchMap, throwError } from 'rxjs';
 import { catchError, map, mergeMap, throwIfEmpty } from 'rxjs/operators';
 import { ROOM_MODEL, PARTICIPANT_MODEL } from '../../database/constants';
 import { Room } from '../../database/schemas/room.schema';
@@ -11,7 +11,7 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ParticipantDto, ResRoomDto } from './dto/response.room.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Message } from 'database/schemas/message.schema';
+import { Message } from '../../database/schemas/message.schema';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RoomService {
@@ -29,15 +29,15 @@ export class RoomService {
 
     getRooms(search?: string): Observable<{ rooms: Room[], lastRecord: string | null }> {
         const query = search ? { 'name': { $regex: search, $options: 'i' } } : {};
-
         const lastRecord = new Date().getTime().toString();
-
-        return from(this.roomModel.find(query).exec().then(rooms => {
-            return {
-                rooms: rooms,
-                lastRecord: lastRecord
-            };
-        }));
+        return from(
+            this.roomModel.find(query).populate('participants owner').exec().then(rooms => {
+                return {
+                    rooms: rooms,
+                    lastRecord: lastRecord
+                };
+            })
+        );
     }
 
     /**
@@ -54,7 +54,7 @@ export class RoomService {
         )
     }
 
-    findById(id: string): Observable<ResRoomDto> {
+    findById(id: string): Observable<{ room: ResRoomDto }> {
         return from(
             this.roomModel.findById(id)
                 .populate('creator', 'username avatar')
@@ -83,7 +83,10 @@ export class RoomService {
                         return participantDto;
                     }),
                 };
-                return resRoomDto;
+                return { room: resRoomDto };
+            }),
+            catchError(error => {
+                return throwError(error.message);
             })
         );
     }
@@ -92,7 +95,7 @@ export class RoomService {
         const room = await this.cacheManager.get<Room>(id);
         if (room) return room;
 
-        const roomDB = await this.roomModel.findById(id).exec();
+        const roomDB = await this.roomModel.findById(id).populate('participants owner').exec();
         if (!roomDB) {
             throw new NotFoundException(`Room with id ${id} not found`);
         }
@@ -100,7 +103,7 @@ export class RoomService {
         return roomDB;
     }
 
-    async save(data: CreateRoomDto): Promise<Room> {
+    async save(data: CreateRoomDto, userId: string): Promise<Room> {
         const { userIds } = data;
 
         const existingRooms = await this.roomModel.find({ participants: { $size: userIds.length, $all: userIds } }).exec();
@@ -110,7 +113,13 @@ export class RoomService {
 
         const isGroup = userIds.length > 2;
         const timeLastMessage = new Date();
-        const newRoom = new this.roomModel({ ...data, isGroup, timeLastMessage });
+        const newRoom = new this.roomModel({
+            ...data, 
+            isGroup, 
+            timeLastMessage, 
+            owner: userId,
+            avatarUrl: 'https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp'
+        });
 
         const savedRoom = await newRoom.save();
 
@@ -124,29 +133,28 @@ export class RoomService {
         return savedRoom;
     }
 
-    async inviteUserIntoRoom(id: string, data: InviteUserDto): Promise<Room> {
-        const room = await this.roomModel.findById(id).exec();
+    async inviteUserIntoRoom(id: string, data: InviteUserDto): Promise<{room: Room}> {
+        const room = await this.roomModel.findById(id).populate('participants owner').exec();
         if (!room) {
             throw new NotFoundException(`Room with id ${id} not found`);
         }
-
+console.log('xxxxxxxxxx', room)
         if (!room.isGroup) {
             throw new Error(`Room with id ${id} is not a group room`);
         }
-
-        const existingParticipant = room.participants.find(participant => participant.userId === data.userId);
+        const existingParticipant = room.participants.find(par => data.userIds.includes(par.userId));
         if (existingParticipant) {
-            return room;
+            throw new BadRequestException(`user exist in room`);
         }
 
-        const newParticipant = new this.participantModel({ roomId: id, userId: data.userId });
-        await newParticipant.save();
-
-        room.participants.push({ userId: data.userId });
-        const updatedRoom = await room.save();
-
-        await this.cacheManager.set(updatedRoom._id.toString(), updatedRoom);
-        return updatedRoom;
+        const participants = data.userIds.map(userId => ({
+            roomId: room._id,
+            userId: userId
+        }));
+        await this.participantModel.insertMany(participants);
+        const roomDB = await this.roomModel.findById(id).exec();
+        await this.cacheManager.set(roomDB._id.toString(), roomDB);
+        return { room: roomDB};
     }
 
     /**
@@ -155,8 +163,8 @@ export class RoomService {
      * @param data 
      * @returns 
      */
-    async updateNameOfRoom(id: string, data: ChangeRoomNameDto): Promise<Room> {
-        const room = await this.roomModel.findById(id).exec();
+    async updateNameOfRoom(id: string, data: ChangeRoomNameDto): Promise<{ room: Room}> {
+        const room = await this.roomModel.findById(id).populate('participants owner').exec();
         if (!room) {
             throw new NotFoundException(`Room with id ${id} not found`);
         }
@@ -164,7 +172,7 @@ export class RoomService {
         const updatedRoom = await room.save();
         await this.cacheManager.set(updatedRoom._id.toString(), updatedRoom);
 
-        return updatedRoom;
+        return {room: updatedRoom };
     }
 
     /**
@@ -174,12 +182,12 @@ export class RoomService {
      * @returns 
      */
     async updateAvatar(id: string, file: any): Promise<Room> {
-        const avatarUrl = file.path;
-        const room = await this.roomModel.findById(id).exec();
+        const room = await this.roomModel.findById(id).populate('participants owner').exec();
         if (!room) {
             throw new NotFoundException(`Room with id ${id} not found`);
         }
-        room.avatarUrl = avatarUrl;
+        
+        room.avatarUrl = file.path;
         const savedRoom = await room.save();
         await this.cacheManager.set(savedRoom._id.toString(), savedRoom);
         return savedRoom;

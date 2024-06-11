@@ -3,7 +3,7 @@ import { Model } from 'mongoose';
 import { Response, NextFunction } from 'express';
 import { Room } from '../../database/schemas/room.schema';
 import { AuthenticatedRequest } from '../../auth/interface/authenticated-request.interface';
-import { ROOM_MODEL } from 'database/constants';
+import { ROOM_MODEL } from '../../database/constants';
 
 @Injectable()
 export class CheckOwnerMiddleware implements NestMiddleware {

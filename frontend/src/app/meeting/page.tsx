@@ -14,7 +14,7 @@ function VideoCall() {
         [ENDPOINT.ROOM.TEST_CALL],
         () => RoomService.testCall(path.get("id") as string),
         {
-            onSuccess: (response) => {
+            onSuccess: (response: any) => {
             },
         },
     )

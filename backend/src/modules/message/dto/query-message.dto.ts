@@ -21,8 +21,6 @@ export class QueryMessageDto {
     @IsString()
     keyword: string = "";
 
-    @Transform(({ value }) => new ParseFloatPipe(value))
-    @IsOptional()
-    @IsBoolean()
-    isJumpToMessages: boolean = false;
+    // @IsBoolean()
+    // isJumpToMessages: boolean;
 }

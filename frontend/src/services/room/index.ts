@@ -13,13 +13,11 @@ class Room {
 
     createRoom = async (body: any): Promise<any> => {
         const res: any = await http.post(ENDPOINT.ROOM.CREATE_ROOM, body)
-
         return res
     }
 
-    invitesToRoom = async (body: any): Promise<any> => {
-        const res: any = await http.post(ENDPOINT.ROOM.INVITES_TO_ROOM, body)
-
+    invitesToRoom = async (body: any, id: string): Promise<any> => {
+        const res: any = await http.put(ENDPOINT.ROOM.INVITES_TO_ROOM.replace(':id', id), body)
         return res
     }
 
@@ -51,7 +49,6 @@ class Room {
                 'Content-Type': 'multipart/form-data',
             },
         })
-
         return res
     }
 }

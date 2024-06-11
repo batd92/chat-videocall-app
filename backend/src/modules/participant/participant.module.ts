@@ -1,9 +1,9 @@
 import { Module, MiddlewareConsumer, RequestMethod, NestModule } from '@nestjs/common';
 import { ParticipantService } from './participant.service';
 import { DatabaseModule } from '../../database/database.module';
-import { CheckParticipantMiddleware } from 'common/middleware/room.middleware';
+import { CheckParticipantMiddleware } from '../../common/middleware/room.middleware';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ParticipantDataInitializerService } from 'initializers/participant.initializer';
+import { ParticipantDataInitializerService } from '../../initializers/participant.initializer';
 
 @Module({
     imports: [DatabaseModule, EventEmitterModule.forRoot()],

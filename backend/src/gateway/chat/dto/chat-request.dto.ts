@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsArray, ValidateNested, Min, IsNumber } from 'class-validator';
-import { TypeStorageFile, BaseRequest, ActionType } from 'gateway/base-dto/base.request';
+import { TypeStorageFile, BaseRequest, ActionType } from '../../base-dto/base.request';
 
 export class TextRequest extends BaseRequest {
     @IsNotEmpty()

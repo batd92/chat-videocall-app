@@ -15,13 +15,13 @@ export class UserSession {
     @Prop({ required: true })
     firebaseToken: string;
 
-    @Prop({ required: true, default: OS.WEB, enum: OS })
+    @Prop({ required: true, default: OS.WEB, enum: OS, type: String })
     os: OS;
 
     @Prop()
     socketId?: string;
 
-    @Prop({ required: true, default: StatusAppUser.OFFLINE, enum: StatusAppUser })
+    @Prop({ required: true, default: StatusAppUser.OFFLINE, enum: StatusAppUser, type: String })
     status: StatusAppUser;
 }
 

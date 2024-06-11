@@ -4,7 +4,7 @@ import { from, Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Participant, ParticipantDocument } from '../../database/schemas/participant.schema';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PARTICIPANT_MODEL } from 'database/constants';
+import { PARTICIPANT_MODEL } from '../../database/constants';
 
 @Injectable()
 export class ParticipantService {

@@ -17,6 +17,52 @@ export class UserService {
         return from(this.userModel.findOne({ username }).exec());
     }
 
+    /**
+     * Get info user
+     * @param username 
+     * @returns 
+     */
+    findByAuthReq(username: string): Observable<{ data: Partial<User>; status: string }> {
+        return from(this.userModel.findOne({ username }).exec()).pipe(
+            map(user => {
+                if (!user) {
+                    throw new Error('User not found');
+                }
+                return {
+                    data: {
+                        _id: user._id,
+                        username: user.username,
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        avatar: user.avatar,
+                        roles: user.roles
+                    },
+                    status: 'ok'
+                };
+            })
+        );
+    }
+
+    /**
+     * Get all users
+     * @returns 
+     */
+    findAll(): Observable<{ users: Partial<User>[] }> {
+        return from(this.userModel.find().exec()).pipe(
+            map(_users => ({
+                users: _users.map(user => ({
+                    _id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    avatar: user.avatar,
+                }))
+            }))
+        );
+    }
+
     findByUserId(id: string): Promise<User> {
         return this.userModel.findOne({ _id: id }).exec();
     }

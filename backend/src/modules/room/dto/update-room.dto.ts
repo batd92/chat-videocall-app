@@ -9,8 +9,10 @@ export class UpdateRoomDto {
 }
 
 export class InviteUserDto {
-    @IsNotEmpty()
-    readonly userId: string;
+    @IsArray()
+    @IsString({ each: true })
+    @ArrayMinSize(1)
+    readonly userIds: string[];
 }
 
 export class ChangeRoomNameDto {
