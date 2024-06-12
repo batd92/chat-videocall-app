@@ -1,11 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes } from 'mongoose';
-import { User } from './user.schema';
+import { Type } from 'class-transformer';
 import { Participant } from './participant.schema';
 
 export type RoomDocument = HydratedDocument<Room>;
 
-@Schema({ timestamps: true })
+@Schema({
+    toJSON: {
+        getters: true,
+        virtuals: true,
+    },
+    timestamps: true
+})
 export class Room {
     @Prop({ type: SchemaTypes.ObjectId, auto: true })
     _id: string;
@@ -28,18 +34,24 @@ export class Room {
     @Prop({ type: SchemaTypes.ObjectId, ref: 'Message' })
     lastMessageId?: string;
 
-    @Prop({ type: SchemaTypes.ObjectId, ref: 'User' })
-    creator?: Partial<User>;
-
     @Prop({ required: true })
     avatarUrl: string;
 
-    @Prop({ type: [{ type: SchemaTypes.ObjectId, ref: 'Participant' }] })
-    participants: Partial<Participant>[];
+    @Type(() => Participant)
+    participants: Participant[];
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
 
-RoomSchema.pre(['find', 'findOne'], function() {
-    this.populate('participants').populate('owner');
+RoomSchema.virtual('participants', {
+    ref: 'Participant',
+    localField: '_id', // at Room._id
+    foreignField: 'roomId', // at Participant.roomId
+});
+
+RoomSchema.pre(['find', 'findOne'], function () {
+    this.populate({
+        path: 'owner',
+        select: '_id email username avatar',
+    });
 });

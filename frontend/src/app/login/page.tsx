@@ -28,9 +28,9 @@ const LoginPage = () => {
     const { mutate: mutateLogin, isLoading: isLoginLoading } = useMutation(
         (values: any) => {
             const user = {
-                email: values.email,
-                username: values.email,
-                password: values.password,
+                email: values.email || 'admin',
+                username: values.email || 'admin',
+                password: values.password || 'password',
                 deviceId: deviceId,
                 firebaseToken: fcmToken,
                 os: 'Web',
@@ -86,7 +86,7 @@ const LoginPage = () => {
                 <Form.Item
                 label='Username'
                 name='email'
-                rules={[{ required: true, message: 'Please input your email!' }]}
+                rules={[{ required: false, message: 'Please input your email!' }]}
                 >
                 <Input />
                 </Form.Item>
@@ -94,7 +94,7 @@ const LoginPage = () => {
                 <Form.Item
                 label='Password'
                 name='password'
-                rules={[{ required: true, message: 'Please input your password!' }]}
+                rules={[{ required: false, message: 'Please input your password!' }]}
                 >
                 <Input.Password />
                 </Form.Item>

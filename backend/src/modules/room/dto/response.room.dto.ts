@@ -14,8 +14,8 @@ export class ParticipantDto {
     readonly userId: string;
     readonly indexMessageRead: string;
     readonly isOnline: boolean;
-    readonly username: string; // username của user
-    readonly avatar: string; // avatar cảu user
+    readonly username: string; 
+    readonly avatar: string;
 }
 
 class FileStorage {

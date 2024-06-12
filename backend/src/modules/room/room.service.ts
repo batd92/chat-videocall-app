@@ -12,14 +12,12 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ParticipantDto, ResRoomDto } from './dto/response.room.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Message } from '../../database/schemas/message.schema';
+import { IParticipant } from 'modules/participant/interface/interface-participant';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RoomService {
     constructor(
         @Inject(ROOM_MODEL) private roomModel: Model<Room>,
-
-        @Inject(PARTICIPANT_MODEL) private participantModel: Model<Participant>,
-
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
         private readonly eventEmitter: EventEmitter2,
     ) {
@@ -29,17 +27,29 @@ export class RoomService {
 
     getRooms(search?: string): Observable<{ rooms: Room[], lastRecord: string | null }> {
         const query = search ? { 'name': { $regex: search, $options: 'i' } } : {};
-        const lastRecord = new Date().getTime().toString();
+    
         return from(
-            this.roomModel.find(query).populate('participants owner').exec().then(rooms => {
-                return {
-                    rooms: rooms,
-                    lastRecord: lastRecord
-                };
-            })
+            this.roomModel.find(query)
+                .sort({ 'createdAt': -1})
+                .populate({
+                    path: 'participants',
+                    select: '_id indexMessageRead -roomId',
+                })
+                .populate({
+                    path: 'owner',
+                    select: '_id email username avatar'
+                })
+                .exec()
+                .then(rooms => {
+                    const lastRecord = rooms[rooms.length - 1].id.toString();
+                    return {
+                        rooms: rooms,
+                        lastRecord: lastRecord
+                    };
+                })
         );
     }
-
+    
     /**
      * Find one
      * @param id 
@@ -48,8 +58,14 @@ export class RoomService {
     findOne(id: string): Observable<Room> {
         return from(
             this.roomModel.findById(id)
-                .populate('creator', 'username avatar')
-                .populate('participants.user', 'username avatar')
+                .populate({
+                    path: 'participants',
+                    select: '_id indexMessageRead userId -roomId',
+                })
+                .populate({
+                    path: 'owner',
+                    select: '_id email username avatar'
+                })
                 .exec()
         )
     }
@@ -57,8 +73,14 @@ export class RoomService {
     findById(id: string): Observable<{ room: ResRoomDto }> {
         return from(
             this.roomModel.findById(id)
-                .populate('creator', 'username avatar')
-                .populate('participants.user', 'username avatar')
+                .populate({
+                    path: 'participants',
+                    select: '_id indexMessageRead userId -roomId',
+                })
+                .populate({
+                    path: 'owner',
+                    select: '_id email username avatar'
+                })
                 .exec()
         ).pipe(
             map((room: Room | null) => {
@@ -72,30 +94,40 @@ export class RoomService {
                     owner: room.owner,
                     avatarUrl: room.avatarUrl,
                     totalMessage: room.totalMessage,
-                    participants: room.participants?.map(participant => {
+                    participants: room.participants?.map((participant: any) => {
                         const participantDto: ParticipantDto = {
-                            userId: participant.user._id.toString(),
+                            userId: participant.userId._id.toString(),
                             indexMessageRead: participant.indexMessageRead.toString(),
                             isOnline: true,
-                            username: participant.user.username,
-                            avatar: participant.user.avatar,
+                            username: participant.userId.username,
+                            avatar: participant.userId.avatar,
                         };
                         return participantDto;
-                    }),
+                    }) || [],
                 };
                 return { room: resRoomDto };
             }),
             catchError(error => {
-                return throwError(error.message);
+                return throwError(() => new Error(error.message));
             })
         );
     }
+x    
 
     async getById(id: string): Promise<Room> {
         const room = await this.cacheManager.get<Room>(id);
         if (room) return room;
 
-        const roomDB = await this.roomModel.findById(id).populate('participants owner').exec();
+        const roomDB = await this.roomModel.findById(id)
+            .populate({
+                path: 'participants',
+                select: '_id indexMessageRead -roomId',
+            })
+            .populate({
+                path: 'owner',
+                select: '_id email username avatar'
+            })
+            .exec();
         if (!roomDB) {
             throw new NotFoundException(`Room with id ${id} not found`);
         }
@@ -123,22 +155,32 @@ export class RoomService {
 
         const savedRoom = await newRoom.save();
 
-        const participants = userIds.map(userId => ({
+        const participants: IParticipant[] = userIds.map(userId => ({
             roomId: savedRoom._id,
             userId: userId
         }));
-        await this.participantModel.insertMany(participants);
+
+        this.eventEmitter.emit('addUserToRoom', participants);
         await this.cacheManager.set(savedRoom._id.toString(), savedRoom);
 
         return savedRoom;
     }
 
     async inviteUserIntoRoom(id: string, data: InviteUserDto): Promise<{room: Room}> {
-        const room = await this.roomModel.findById(id).populate('participants owner').exec();
+        const room = await this.roomModel.findById(id)
+            .populate({
+                path: 'participants',
+                select: '_id indexMessageRead -roomId',
+            })
+            .populate({
+                path: 'owner',
+                select: '_id email username avatar'
+            })
+            .exec();
         if (!room) {
             throw new NotFoundException(`Room with id ${id} not found`);
         }
-console.log('xxxxxxxxxx', room)
+
         if (!room.isGroup) {
             throw new Error(`Room with id ${id} is not a group room`);
         }
@@ -147,11 +189,13 @@ console.log('xxxxxxxxxx', room)
             throw new BadRequestException(`user exist in room`);
         }
 
-        const participants = data.userIds.map(userId => ({
+        const participants: IParticipant[] = data.userIds.map(userId => ({
             roomId: room._id,
             userId: userId
         }));
-        await this.participantModel.insertMany(participants);
+
+        this.eventEmitter.emit('addUserToRoom', participants);
+
         const roomDB = await this.roomModel.findById(id).exec();
         await this.cacheManager.set(roomDB._id.toString(), roomDB);
         return { room: roomDB};
@@ -164,7 +208,16 @@ console.log('xxxxxxxxxx', room)
      * @returns 
      */
     async updateNameOfRoom(id: string, data: ChangeRoomNameDto): Promise<{ room: Room}> {
-        const room = await this.roomModel.findById(id).populate('participants owner').exec();
+        const room = await this.roomModel.findById(id)
+            .populate({
+                path: 'participants',
+                select: '_id indexMessageRead -roomId',
+            })
+            .populate({
+                path: 'owner',
+                select: '_id email username avatar'
+            })
+            .exec();
         if (!room) {
             throw new NotFoundException(`Room with id ${id} not found`);
         }
@@ -182,7 +235,16 @@ console.log('xxxxxxxxxx', room)
      * @returns 
      */
     async updateAvatar(id: string, file: any): Promise<Room> {
-        const room = await this.roomModel.findById(id).populate('participants owner').exec();
+        const room = await this.roomModel.findById(id)
+            .populate({
+                path: 'participants',
+                select: '_id indexMessageRead -roomId',
+            })
+            .populate({
+                path: 'owner',
+                select: '_id email username avatar'
+            })
+            .exec();
         if (!room) {
             throw new NotFoundException(`Room with id ${id} not found`);
         }
@@ -210,7 +272,7 @@ console.log('xxxxxxxxxx', room)
                 if (!room) {
                     throw new NotFoundException(`Room with id ${id} not found`);
                 }
-                this.eventEmitter.emit('roomDeleted', id);
+                this.eventEmitter.emit('removeRoom', id);
                 return room;
             }),
             catchError(err => {
@@ -221,7 +283,7 @@ console.log('xxxxxxxxxx', room)
 
     onNewMessageInRoom(message: Message): void {
         // TODO
-
+        
     }
 
     onUserInRoom(message: Message): void {

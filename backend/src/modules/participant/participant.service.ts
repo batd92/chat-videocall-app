@@ -5,6 +5,7 @@ import { catchError, map } from 'rxjs/operators';
 import { Participant, ParticipantDocument } from '../../database/schemas/participant.schema';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PARTICIPANT_MODEL } from '../../database/constants';
+import { IParticipant } from './interface/interface-participant';
 
 @Injectable()
 export class ParticipantService {
@@ -12,7 +13,8 @@ export class ParticipantService {
         @Inject(PARTICIPANT_MODEL) private readonly participantModel: Model<ParticipantDocument>,
         private readonly eventEmitter: EventEmitter2
     ) {
-        this.eventEmitter.on('roomDeleted', (roomId: string) => this.delete(roomId));
+        this.eventEmitter.on('removeRoom', (roomId: string) => this.delete(roomId));
+        this.eventEmitter.on('addUserToRoom', (participants: IParticipant[]) => this.addUserToRoom(participants));
     }
 
     create(participant: Partial<Participant>): Observable<Participant> {
@@ -44,5 +46,9 @@ export class ParticipantService {
             { $set: { deletedAt: Date.now() } },
             { new: true },
         ).exec();
+    }
+
+    addUserToRoom(participants: IParticipant[]): void {
+        this.participantModel.insertMany(participants);
     }
 }

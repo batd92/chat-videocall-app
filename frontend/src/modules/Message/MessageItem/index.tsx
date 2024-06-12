@@ -30,7 +30,7 @@ export const MessageItem = ({ data, rooms, setRooms }) => {
         participants,
         lastMessage: lastMsg,
         totalMessage,
-        avatar,
+        avatarUrl,
         hasOnline,
         name,
         createdAt,
@@ -143,12 +143,12 @@ export const MessageItem = ({ data, rooms, setRooms }) => {
     return (
         <div className="c-message-item" onClick={handleSeenMessage}>
             <div className="avatar">
-                {isGroup && !avatar ? (
+                {isGroup && !avatarUrl ? (
                 <AvatarGroupWrap users={participants} isOnline={hasOnline} />
                 ) : (
                 <AvatarWrap
                     size={48}
-                    src={avatar || getImage(currentFriend?.[0]?.avatar, IMAGE_TYPE.AVATAR)}
+                    src={avatarUrl || getImage(currentFriend?.[0]?.avatar, IMAGE_TYPE.AVATAR)}
                     isOnline={hasOnline}
                 />
                 )}

@@ -120,11 +120,11 @@ const UpdateRoom: React.FC<IProps> = ({
                     showSearch
                     filterOption={filterFriends}
                 >
-                    {_.xorBy(roomDetail?.participants || [], [...users], '_id').map((user: any) => (
-                    <Select.Option key={user._id} value={user._id}>
-                        <Avatar src={user.avatar} />
-                        &nbsp;&nbsp;{user.firstName + user.lastName}
-                    </Select.Option>
+                    {_.differenceBy(users || [], roomDetail?.participants || [], '_id').map((user: any) => (
+                        <Select.Option key={user._id} value={user._id}>
+                            <Avatar src={user.avatar} />
+                            &nbsp;&nbsp;{user.firstName} {user.lastName}
+                        </Select.Option>
                     ))}
                 </Select>
                 </Form.Item>

@@ -124,7 +124,7 @@ export const RoomSearch = ({ setIsSearch }: IProps) => {
                     onClick={() => onRoomChoose(room)}
                     >
                     <div className='avatar'>
-                        {room.isGroup && !room?.avatar ? (
+                        {room.isGroup && !room?.avatarUrl ? (
                         <AvatarGroupWrap
                             users={room?.participants}
                             isOnline={room?.hasOnline}
@@ -133,9 +133,9 @@ export const RoomSearch = ({ setIsSearch }: IProps) => {
                         <AvatarWrap
                             size={48}
                             src={
-                            room?.avatar ||
+                            room?.avatarUrl ||
                             getImage(
-                                currentFriend?.[0]?.avatar!,
+                                currentFriend?.[0]?.avatarUrl!,
                                 IMAGE_TYPE.AVATAR,
                             )
                             }

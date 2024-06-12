@@ -1,7 +1,6 @@
 import { IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
 import { TextContent, NotifyContent, VideoCallContent, FileContent } from '../../../database/schemas/message.schema';
-
-class MessageDto {
+export class MessageDto {
     readonly content: TextContent | NotifyContent | VideoCallContent | FileContent[];
     readonly _id: string;
     readonly type: string;

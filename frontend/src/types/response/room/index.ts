@@ -29,7 +29,6 @@ export interface IGetRoomResponse {
     totalMessage: number
     fileStorages: IFileStorage[]
     participants: IParticipant[]
-    creatorId: string
     createdAt: number
     updatedAt: number
     hasOnline: boolean

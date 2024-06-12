@@ -2,7 +2,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { USER_MODEL } from '../database/constants';
 import { RoleType } from '../shared/enum/role-type.enum';
-import { User } from '../database/schemas/user.schema';
+import { UserSchema } from '../database/schemas/user.schema';
 
 @Injectable()
 export class UserDataInitializerService implements OnModuleInit {
@@ -13,7 +13,7 @@ export class UserDataInitializerService implements OnModuleInit {
     async onModuleInit(): Promise<void> {
         console.log('(UserModule) is initialized...');
         // await this.userModel.deleteMany({});
-        // const users = [1, 2, 3, 4, 5].map(id => {
+        // const users = [1, 2].map(id => {
         //     return {
         //         username: 'user' + id,
         //         password: 'password',

@@ -325,20 +325,25 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
         let indexMessage = -1;
         let todayMessages: IGetMessagesResponse[] = [];
     
-        // Nhóm tin nhắn theo ngày
-        const result = officialMessages.reduce((groups, message) => {
-            const messageDate = new Date(message.createdAt).toISOString().split('T')[0]; // Lấy ngày tháng từ định dạng ISO
+        const groupedMessages = officialMessages.reduce((groups, message) => {
+            const messageDate = new Date(message.createdAt).toISOString().split('T')[0];
             if (messageDate === todayDateString) {
-                todayMessages.push(message);
+                if (!groups.todayMessages) groups.todayMessages = [];
+                groups.todayMessages.push(message);
             } else {
-                groups.push({ date: messageDate, messages: [message] });
+                if (!groups[messageDate]) groups[messageDate] = [];
+                groups[messageDate].push(message);
             }
             return groups;
-        }, []);
+        }, {});
     
-        // Nếu có tin nhắn vào ngày hôm nay, đẩy chúng vào đầu mảng result
-        if (todayMessages.length > 0) {
-            result.unshift({ date: todayDateString, messages: todayMessages });
+        const result = Object.keys(groupedMessages).map(date => ({
+            date,
+            messages: groupedMessages[date]
+        }));
+    
+        if (groupedMessages.todayMessages) {
+            result.unshift({ date: todayDateString, messages: groupedMessages.todayMessages });
         }
     
         // Hiển thị tin nhắn theo nhóm ngày
@@ -398,7 +403,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
             />
         );
     
-        const userAvatar = roomDetailLocal?.isGroup && !roomDetailLocal?.avatar ? (
+        const userAvatar = roomDetailLocal?.isGroup && !roomDetailLocal?.avatarUrl ? (
             <AvatarGroupWrap
                 users={roomDetailLocal?.participants}
                 isOnline={roomDetailLocal?.hasOnline}
@@ -408,7 +413,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
                 size={48}
                 isOnline={roomDetailLocal?.hasOnline}
                 src={
-                    roomDetailLocal?.avatar ||
+                    roomDetailLocal?.avatarUrl ||
                     getImage(currentFriend?.avatar!, IMAGE_TYPE.AVATAR)
                 }
             />

@@ -6,18 +6,18 @@ import React from 'react'
 import './style.scss'
 
 interface IModalWrap {
-    conversation: IGetRoomResponse
+    room: IGetRoomResponse
     isOpen: boolean
     onCancel: () => void
 }
 const WaitingCall: React.FC<IModalWrap> = ({
-    conversation,
+    room,
     isOpen = false,
     onCancel,
 }) => {
     const userId = 1
 
-    const participantFirst = conversation?.participants?.filter(
+    const participantFirst = room?.participants?.filter(
         (e) => e._id !== String(userId),
     )[0]
     const renderFooter = () => {
@@ -44,12 +44,12 @@ const WaitingCall: React.FC<IModalWrap> = ({
             >
                 <Row className='waiting-call-card' justify='center'>
                     <div>
-                        {conversation?.isGroup ? (
+                        {room?.isGroup ? (
                             <div className='group'>
                                 <h1 className='name'>
-                                    <strong>{conversation.name}</strong>
+                                    <strong>{room.name}</strong>
                                 </h1>
-                                {conversation.participants.map((participant) => (
+                                {room.participants.map((participant : any) => (
                                     <Avatar
                                         className='avatar'
                                         key={participant._id}
@@ -61,7 +61,7 @@ const WaitingCall: React.FC<IModalWrap> = ({
                         ) : (
                             <div className='not-group'>
                                 <h1 className='name'>
-                                    <strong>Quy NT</strong>
+                                    <strong>User</strong>
                                 </h1>
                                 <Avatar
                                     className='avatar'

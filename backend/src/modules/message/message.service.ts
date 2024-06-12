@@ -9,6 +9,7 @@ import { QueryMessageDto } from './dto/query-message.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TextRequest, RemoveMessageRequest, UploadFileRequest, MakeActionRequest } from '../../gateway/chat/dto/chat-request.dto';
 import { BaseRequest } from '../../gateway/base-dto/base.request';
+import { MessageDto } from './dto/response.message.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class MessageService {
@@ -38,6 +39,53 @@ export class MessageService {
         ).pipe(
             map(data => ({ data, status: 'ok' })),
             catchError(error => throwError(error))
+        );
+    }
+
+    getSummaryMessageByRoom(roomId: string): Observable<{ data: MessageDto[] }> {
+        const message = this.messageModel.aggregate([
+            {
+                $match: {
+                    roomId: roomId,
+                    $or: [
+                        { type: 'File' },
+                        { type: 'Link' },
+                        { type: 'Media' }
+                    ]
+                }
+            },
+            {
+                $group: { _id: "$type", messages: { $push: "$$ROOT" } }
+            },
+            {
+                $addFields: {
+                    totalRecord: { $size: "$messages" }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    content: 1,
+                    type: 1,
+                    userId: 1,
+                    createdAt: 1,
+                    updatedAt: 1
+                }
+            }
+        ]);
+
+        return from(message).pipe(
+            map((results: any[]) => {
+                const data: MessageDto[] = results.map(result => ({
+                    _id: result._id,
+                    content: result.content,
+                    type: result.type,
+                    userId: result.userId,
+                    createdAt: result.createdAt,
+                    updatedAt: result.updatedAt
+                }));
+                return { data };
+            })
         );
     }
 

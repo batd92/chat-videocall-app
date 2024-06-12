@@ -1,6 +1,7 @@
 export enum TypeMessage {
     TEXT = "Text",
     FILE = "File",
+    MEDIA = "Media",
     CALL = "Call",
     NOTIFY = "Notify"
 }
