@@ -1,6 +1,6 @@
 'use client'
 
-import { IGetMeResponse, ILoginResponse } from '@/types/response'
+import { IGetMeResponse, ILoginResponse } from '@/interface/response'
 import { deleteCookie, getCookie, setCookie } from '@/utils/helpers/storage'
 import { createContext, useContext, useEffect, useState } from 'react'
 

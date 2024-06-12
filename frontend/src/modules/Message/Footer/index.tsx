@@ -5,7 +5,7 @@ import { ESocketEvent, UPLOAD_FILE_STATUS, UPLOAD_LIST_TYPE } from "@/utils/cons
 import { convertLinkToFileObject, convertToFileObjectAntd, getFileType, notificationMessage } from "@/utils/helpers";
 import { useSocket } from "@/providers/Socket";
 import { UploadService } from "@/services/upload";
-import { IMessage, IUploadedFile } from "@/types/common";
+import { IMessage, IUploadedFile } from "@/interface/common";
 import { UploadWrap } from "@/components/commons";
 import { AttachmentIcon } from "@/components/icons";
 import { ReplyFooter } from "./Reply";

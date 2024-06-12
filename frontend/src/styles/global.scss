@@ -12,6 +12,16 @@ body {
     max-width: 100vw;
 }
 
+html {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+html.dark-theme {
+    background-color: #000000;
+    color: #ffffff;
+}
+
 body {
     color: var(--body-color);
     background: var(--body-bg);

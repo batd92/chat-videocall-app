@@ -1,6 +1,6 @@
-import { IResponse } from '@/types/common'
-import { IGetRoomsRequest } from '@/types/request/room'
-import { IGetRoomResponse } from '@/types/response/room'
+import { IResponse } from '@/interface/common'
+import { IGetRoomsRequest } from '@/interface/request/room'
+import { IGetRoomResponse } from '@/interface/response/room'
 import http from '../axiosClient'
 import { ENDPOINT } from '../endpoint'
 

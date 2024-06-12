@@ -1,7 +1,7 @@
 import { Modal, notification } from 'antd';
 import { IMAGE_TYPE, UPLOAD_FILE_STATUS } from '../constants';
 import moment from 'moment';
-import { TypeFileStorage } from '@/types/response';
+import { TypeFileStorage } from '@/interface/response';
 
 interface INotificationModal {
     title?: string;

@@ -1,4 +1,4 @@
-import { ISvgIcon } from '@/types/common'
+import { ISvgIcon } from '@/interface/common'
 
 export const InviteIcon: React.FC<ISvgIcon> = ({
   width = 26,

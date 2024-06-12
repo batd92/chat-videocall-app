@@ -1,4 +1,4 @@
-import { IGetMessagesRequest } from '@/types/request'
+import { IGetMessagesRequest } from '@/interface/request'
 import http from '../axiosClient'
 import { ENDPOINT } from '../endpoint'
 

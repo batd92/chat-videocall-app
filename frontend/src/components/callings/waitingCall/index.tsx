@@ -1,6 +1,6 @@
 'use client'
 
-import { IGetRoomResponse } from '@/types/response/room'
+import { IGetRoomResponse } from '@/interface/response/room'
 import { Avatar, Image, Modal, Row } from 'antd'
 import React from 'react'
 import './style.scss'

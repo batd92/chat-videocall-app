@@ -3,7 +3,7 @@ import { AvatarGroupWrap, AvatarWrap } from '@/components/commons';
 import { SeenIcon, SentIcon } from '@/components/icons';
 import { useAuth } from '@/providers/Auth';
 import { useSocket } from '@/providers/Socket';
-import { IParticipant } from '@/types/common';
+import { IParticipant } from '@/interface/common';
 import { ESocketEvent, IMAGE_TYPE } from '@/utils/constants';
 import { APP_ROUTER } from '@/utils/constants/router';
 import {

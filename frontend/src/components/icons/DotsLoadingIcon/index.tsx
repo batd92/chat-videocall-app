@@ -1,4 +1,4 @@
-import { ISvgIcon } from '@/types/common'
+import { ISvgIcon } from '@/interface/common'
 
 export const DotsLoadingIcon: React.FC<ISvgIcon> = ({
   width = 30,

@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React from 'react';
-import { IParticipant } from '@/types/response';
+import { IParticipant } from '@/interface/response';
 import { IMAGE_TYPE } from '@/utils/constants';
 import { getImage } from '@/utils/helpers';
 import './style.scss';

@@ -1,4 +1,4 @@
-import { IGetRoomResponse } from '@/types/response/room'
+import { IGetRoomResponse } from '@/interface/response/room'
 import { Avatar, Modal, Row } from 'antd'
 import React from 'react'
 import './style.scss'

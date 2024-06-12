@@ -1,6 +1,6 @@
 import { AvatarWrap } from '@/components/commons'
 import { DotsLoadingIcon } from '@/components/icons'
-import { IGetMeResponse } from '@/types/response'
+import { IGetMeResponse } from '@/interface/response'
 import './style.scss'
 
 interface IProps {

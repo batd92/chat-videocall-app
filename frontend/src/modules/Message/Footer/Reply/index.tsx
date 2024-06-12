@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { CloseOutlined, FileImageOutlined, FileTextOutlined } from "@ant-design/icons";
 import { Image } from "antd";
-import { IMessage } from "@/types/common";
-import { TypeFileStorage } from "@/types/response";
+import { IMessage } from "@/interface/common";
+import { TypeFileStorage } from "@/interface/response";
 import { IMAGE_TYPE } from "@/utils/constants";
 import { getImage } from "@/utils/helpers";
 import './style.scss';

@@ -1,5 +1,4 @@
 export * from './MessageContent'
-export * from './RoomList'
 export * from './MessageItem'
-export * from './ConversationItem'
+export * from './RoomItem'
 export * from './TypingItem'

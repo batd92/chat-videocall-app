@@ -9,23 +9,22 @@ import { useAuth } from '@/providers/Auth'
 import { useSocket } from '@/providers/Socket'
 import { MessageService, RoomService } from '@/services'
 import { ENDPOINT } from '@/services/endpoint'
-import { IMessage, ITypingUser } from '@/types/common'
-import { IGetMessagesRequest } from '@/types/request'
+import { IMessage, ITypingUser } from '@/interface/common'
+import { IGetMessagesRequest } from '@/interface/request'
 import {
   IGetMessagesResponse,
   IGetRoomResponse,
   IParticipant,
-} from '@/types/response'
-import { TypeDataConversation } from '@/types/socket'
+} from '@/interface/response'
+import { TypeDataConversation } from '@/interface/socket'
 import { ESocketEvent, IMAGE_TYPE, TIMEOUT_CALL } from '@/utils/constants'
 import { getImage, getUserById, truncateString } from '@/utils/helpers'
 import { Divider, Tooltip } from 'antd'
-import moment from 'moment'
 import { useEffect, useRef, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import { useQuery } from 'react-query'
 import { ConversationItem, TypingItem } from '..'
-import MessageMenu from '../MessageMenu'
+import SidebarMenu from '../../SidebarMenu/index'
 import './style.scss'
 import { MessageFooter } from '../Footer'
 import { uniqBy } from 'lodash'
@@ -489,7 +488,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
                     setReplyingTo={setReplyingTo}
                 />
                 {isOpen && (
-                    <MessageMenu
+                    <SidebarMenu
                         open={isOpen}
                         cancel={handelCloseDetail}
                         handleRedirectSearch={handleRedirectSearch}
