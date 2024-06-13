@@ -3,7 +3,6 @@ import { Button, Input } from "antd";
 import { useMutation } from "react-query";
 import { ESocketEvent, UPLOAD_FILE_STATUS, UPLOAD_LIST_TYPE } from "@/utils/constants";
 import { convertLinkToFileObject, convertToFileObjectAntd, getFileType, notificationMessage } from "@/utils/helpers";
-import { useSocket } from "@/providers/Socket";
 import { UploadService } from "@/services/upload";
 import { IMessage, IUploadedFile } from "@/interface/common";
 import { UploadWrap } from "@/components/commons";
@@ -18,22 +17,21 @@ interface IProps {
     setReplyingTo: (msg: IMessage | null) => void;
 }
 
-export const MessageFooter: React.FC<IProps> = ({
+export const AreaChat: React.FC<IProps> = ({
     roomId,
     setIsTyping,
     isTyping,
     replyingTo,
     setReplyingTo,
 }: IProps) => {
-    const { sendMessage } = useSocket();
     const [showAttachment, setShowAttachment] = useState<boolean>(false);
-    const [inputMessage, setInputMessage] = useState('');
+    const [inqueryMessage, setInQueryMessage] = useState('');
     const [uploadedFiles, setUploadedFiles] = useState<IUploadedFile[]>([]);
 
     const { mutateAsync: uploadMedia } = useMutation(
         (file: any) => UploadService.uploadMedia(file),
         {
-            onSuccess: (response) => {
+            onSuccess: (response: any) => {
                 if (!response?.data) return;
                 setUploadedFiles((prev) => [
                     ...prev,
@@ -64,45 +62,44 @@ export const MessageFooter: React.FC<IProps> = ({
         }
     }, [uploadMedia]);
 
-    const handleChangeMessage = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setInputMessage(e.target.value);
+    /**
+     * Typing message
+     */
+    const onTypingMessage = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setInQueryMessage(e.target.value);
         setIsTyping(!!e.target.value);
 
-        sendMessage(
-            JSON.stringify({
-                event: ESocketEvent.TYPING_MESSAGE,
-                payload: {
-                    conversationId: roomId,
-                    isTyping: !!e.target.value,
-                },
-            }),
-        );
-    }, [roomId, setIsTyping, sendMessage]);
+        // send typing to socket
+        //alert('send typing to socket');
+    }, [roomId, setIsTyping]);
 
-    const handleRemoveFile = useCallback((removedFile: IUploadedFile) => {
+    /**
+     * Remove file
+     */
+    const onRemoveFile = useCallback((removedFile: IUploadedFile) => {
         const result = uploadedFiles.filter(
             (file: IUploadedFile) => file.uid !== removedFile.uid,
         );
         setUploadedFiles(result);
     }, [uploadedFiles]);
 
-    const handleSendMessage = useCallback(() => {
-        if (inputMessage.trim() === '' && uploadedFiles.length === 0) return;
+    /**
+     * Send message to server by socket
+     */
+    const onSendMessageToServer = useCallback(() => {
+        if (!inqueryMessage) return;
+        if (!uploadedFiles || uploadedFiles.length === 0) return;
 
-        let time = 0;
-        const messageInfo = {
-            conversationId: roomId,
-            replyFromId: '',
+        // build payload
+        const payloadBase = {
+            roomId: roomId,
+            replyFromId: replyingTo?._id ? replyingTo._id: '',
         };
 
-        if (replyingTo?._id) {
-            messageInfo['replyFromId'] = replyingTo._id;
-        }
-
+        // send file
         if (uploadedFiles.length > 0) {
-            time = 1000;
-            const messageFile = {
-                ...messageInfo,
+            const payload = {
+                ...payloadBase,
                 type: 'File',
                 content: uploadedFiles.map((file: IUploadedFile) => ({
                     url: file.url,
@@ -111,43 +108,26 @@ export const MessageFooter: React.FC<IProps> = ({
                     size: file?.size,
                 })),
             };
-
-            sendMessage(
-                JSON.stringify({
-                    event: ESocketEvent.SEND_MESSAGE,
-                    payload: {
-                        message: messageFile,
-                    },
-                }),
-            );
-
+            // send messsge to socket
             setUploadedFiles([]);
             setShowAttachment(false);
+            alert('send file');
         }
 
-        if (inputMessage.trim() !== '') {
-            const messageText = {
-                ...messageInfo,
+        // send text
+        if (inqueryMessage) {
+            const payloadText = {
+                ...payloadBase,
                 type: 'Text',
-                content: inputMessage,
+                content: inqueryMessage,
             };
 
-            setTimeout(() => {
-                sendMessage(
-                    JSON.stringify({
-                        event: ESocketEvent.SEND_MESSAGE,
-                        payload: {
-                            message: messageText,
-                        },
-                    }),
-                );
-            }, time);
-
-            setInputMessage('');
+            setInQueryMessage('');
+            alert('send text');
         }
 
         setReplyingTo(null);
-    }, [roomId, uploadedFiles, replyingTo, sendMessage, setUploadedFiles, setShowAttachment, setInputMessage, setReplyingTo]);
+    }, [roomId, uploadedFiles, replyingTo, setUploadedFiles, setShowAttachment, setInQueryMessage, setReplyingTo]);
 
     return (
         <div>
@@ -165,7 +145,7 @@ export const MessageFooter: React.FC<IProps> = ({
                         <UploadWrap
                             listType={UPLOAD_LIST_TYPE.PICTURE_CARD}
                             onChangeFiles={handleChangeFile}
-                            onRemoveFiles={handleRemoveFile}
+                            onRemoveFiles={onRemoveFile}
                             uploadedFiles={convertToFileObjectAntd(uploadedFiles)}
                             setUploadedFiles={setUploadedFiles}
                             filesLimit={6}
@@ -174,8 +154,8 @@ export const MessageFooter: React.FC<IProps> = ({
                     <Input.TextArea
                         className='msg-input-inner'
                         placeholder='Type your message here...'
-                        onChange={handleChangeMessage}
-                        value={inputMessage}
+                        onChange={onTypingMessage}
+                        value={inqueryMessage}
                         autoSize={{ minRows: 1, maxRows: 6 }}
                         maxLength={2000}
                     />
@@ -183,10 +163,10 @@ export const MessageFooter: React.FC<IProps> = ({
                 <Button
                     type='link'
                     className='send-msg-btn'
-                    onClick={handleSendMessage}
-                    disabled={inputMessage === '' && uploadedFiles.length === 0}
+                    onClick={onSendMessageToServer}
+                    disabled={inqueryMessage === '' && uploadedFiles.length === 0}
                 >
-                    Send message
+                    Send
                 </Button>
             </div>
         </div>

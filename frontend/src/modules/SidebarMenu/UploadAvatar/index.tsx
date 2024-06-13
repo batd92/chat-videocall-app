@@ -9,7 +9,7 @@ import { notificationMessage } from "@/utils/helpers"
 
 interface IProps {
     roomDetail: IGetRoomResponse
-    setRoomDetailLocal: (data: IGetRoomResponse) => void
+    setRoomCurrentSelected: (data: IGetRoomResponse) => void
 }
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png']
@@ -48,25 +48,25 @@ const handleUploadError = (error: any) => {
 const handleUploadSuccess = (
     response: any,
     roomDetail: IGetRoomResponse,
-    setRoomDetailLocal: (data: IGetRoomResponse) => void
+    setRoomCurrentSelected: (data: IGetRoomResponse) => void
 ) => {
     if (!response) return
-    setRoomDetailLocal({
+    setRoomCurrentSelected({
         ...roomDetail,
-        avatar: response?.data?.path,
+        avatarUrl: response?.data?.path,
     })
 }
 
 const UploadAvatar = ({
     roomDetail,
-    setRoomDetailLocal,
+    setRoomCurrentSelected,
 }: IProps) => {
     const [isError, setIsError] = useState<boolean>(false)
 
     const { mutateAsync: uploadAvatar } = useMutation(
         (file: any) => RoomService.updateRoomAvatar(roomDetail?._id, { file }),
         {
-            onSuccess: (response) => handleUploadSuccess(response, roomDetail, setRoomDetailLocal),
+            onSuccess: (response: any) => handleUploadSuccess(response, roomDetail, setRoomCurrentSelected),
             onError: handleUploadError,
         }
     )
@@ -86,7 +86,7 @@ const UploadAvatar = ({
         <Upload
             showUploadList={false}
             onChange={handleChangeFile}
-            beforeUpload={(file) => beforeUpload(file, setIsError)}
+            beforeUpload={(file: any) => beforeUpload(file, setIsError)}
             className='button-upload'
             accept="image/*"
             fileList={[]}

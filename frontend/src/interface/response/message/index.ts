@@ -3,7 +3,7 @@ export interface IGetMessagesResponse {
     userId: string
     content: string
     type: string
-    conversationId: string
+    roomId: string
     createdAt: number
     updatedAt: number
 }

@@ -15,7 +15,7 @@ interface IProps {
     isUpdateName: boolean
     isUpdateMember: boolean
     roomDetail?: IGetRoomResponse
-    setRoomDetailLocal: any
+    setRoomCurrentSelected: Function
     refresh?: () => void
 }
 
@@ -26,7 +26,7 @@ const UpdateRoom: React.FC<IProps> = ({
     isUpdateName,
     isUpdateMember,
     roomDetail,
-    setRoomDetailLocal,
+    setRoomCurrentSelected,
 }) => {
     const [users, setUsers] = useState<any[]>([])
     const [selectedMembers, setSelectedMembers] = useState<string[]>([])
@@ -48,7 +48,7 @@ const UpdateRoom: React.FC<IProps> = ({
             if (isUpdateMember) {
                 return RoomService.invitesToRoom({
                     userIds: selectedMembers,
-                }, roomDetail?._id)
+                }, roomDetail?._id || '')
             }
 
             return RoomService.updateRoomName(roomDetail?._id || '', {
@@ -58,7 +58,7 @@ const UpdateRoom: React.FC<IProps> = ({
         {
             onSuccess: (response: any) => {
                 onOk(response)
-                setRoomDetailLocal(response?.room)
+                setRoomCurrentSelected(response?.room)
                 onCancel()
                 form.resetFields()
                 setRoomName('')
@@ -122,7 +122,7 @@ const UpdateRoom: React.FC<IProps> = ({
                 >
                     {_.differenceBy(users || [], roomDetail?.participants || [], '_id').map((user: any) => (
                         <Select.Option key={user._id} value={user._id}>
-                            <Avatar src={user.avatar} />
+                            <Avatar src={user.avatarUrl} />
                             &nbsp;&nbsp;{user.firstName} {user.lastName}
                         </Select.Option>
                     ))}

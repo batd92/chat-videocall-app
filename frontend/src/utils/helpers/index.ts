@@ -92,7 +92,7 @@ export const getRoomName = (userList: any[], idList: any[]) => {
 /**
  * Truncate string to specified max length.
  */
-export const truncateString = (str: string, maxLength: number) => {
+export const trunMessage = (str: string, maxLength: number) => {
     if (!str) return '';
     return str.length > maxLength ? `${str.slice(0, maxLength)}...` : str;
 };
@@ -122,10 +122,9 @@ export const getImage = (image: string | null, type: IMAGE_TYPE) => {
 /**
  * Display formatted message time.
  */
-export const displayMessageTime = (inputTime: string) => {
-    const inputMoment = moment(inputTime);
-
-    return moment().isSame(inputMoment, 'day') ? inputMoment.format('HH:mm') : inputMoment.format('YYYY/MM/DD');
+export const formatDateTime = (inputTime: string | number) => {
+    if (!inputTime) return '';
+    return moment(inputTime).format('DD/MM/YYYY HH:mm:ss')
 };
 
 /**

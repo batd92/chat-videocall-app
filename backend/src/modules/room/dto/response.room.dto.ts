@@ -15,7 +15,8 @@ export class ParticipantDto {
     readonly indexMessageRead: string;
     readonly isOnline: boolean;
     readonly username: string; 
-    readonly avatar: string;
+    readonly avatarUrl: string;
+    readonly name: string;
 }
 
 class FileStorage {

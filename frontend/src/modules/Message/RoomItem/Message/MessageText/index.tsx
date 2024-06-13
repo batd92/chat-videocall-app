@@ -45,7 +45,7 @@ export const MessageText = ({ data, isLastMsg, isMe }: IProps) => {
             </div>
             <div className='time'>
                 {isMe && isLastMsg && (data.seen ? <SeenIcon /> : <SentIcon />)}
-                {displayMessageTime(data?.createdAt)}
+                {data?.createdAt}
             </div>
             </div>
         )

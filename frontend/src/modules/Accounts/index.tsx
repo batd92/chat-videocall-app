@@ -14,7 +14,6 @@ const AccountDropdown = () => {
     const { currentUser } = useAuth()
     const router = useRouter()
     const { deviceId } = useFcmToken()
-
     const handleLogout = () => {
         deleteCookie('access_token')
         deleteCookie('refresh_token')
@@ -33,7 +32,7 @@ const AccountDropdown = () => {
                     key: '1-1',
                     label: (
                         <div className='menu-label'>
-                            <UserOutlined /> {currentUser?.name}
+                            <UserOutlined /> {currentUser?.name || 'I am user'}
                         </div>
                     ),
                 },
@@ -57,7 +56,7 @@ const AccountDropdown = () => {
         >
             <Button
                 type='link'
-                icon={<AvatarWrap src={currentUser?.avatar!} size={36} />}
+                icon={<AvatarWrap src={currentUser?.avatarUrl!} size={36} />}
                 style={{ width: 36, height: 36, padding: 0 }}
             />
         </Dropdown>

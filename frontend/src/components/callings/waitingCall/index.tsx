@@ -53,7 +53,7 @@ const WaitingCall: React.FC<IModalWrap> = ({
                                     <Avatar
                                         className='avatar'
                                         key={participant._id}
-                                        src={participant.avatar}
+                                        src={participant.avatarUrl}
                                         alt='description of image'
                                     />
                                 ))}
@@ -65,7 +65,7 @@ const WaitingCall: React.FC<IModalWrap> = ({
                                 </h1>
                                 <Avatar
                                     className='avatar'
-                                    src={participantFirst?.avatar}
+                                    src={participantFirst?.avatarUrl}
                                     alt='description of image'
                                 />
                             </div>

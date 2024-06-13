@@ -62,6 +62,7 @@ export const MediaContainer = ({ list, activeKey = TypeFileStorage.IMAGE, onChan
         <div className='media-container'>
             <div className='media-container__header'>
                 <div onClick={() => onChangeKey(null)}><ArrowLeftOutlined /></div>
+                xxxxxxxxxxxx
                 <span>Media files, files and links</span>
             </div>
             <Tabs className='media-container__content' defaultActiveKey={activeKey} items={items} onChange={onChangeKey} />

@@ -13,7 +13,7 @@ const MemberList: React.FC<MemberListProps> = ({ participants, onAddMemberClick 
         <div className='list-button'>
             {participants.map((participant: any) => (
                 <div className='list-member' key={participant._id}>
-                    <AvatarWrap size={42} src={participant.avatar} isOnline={participant.isOnline} />
+                    <AvatarWrap size={42} src={participant.avatarUrl} isOnline={participant.isOnline} />
                     {participant.name}
                 </div>
             ))}

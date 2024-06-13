@@ -9,7 +9,6 @@ import clsx from 'clsx'
 import { useState } from 'react'
 import './style.scss'
 import { DeleteOutlined, EditOutlined, MoreOutlined } from '@ant-design/icons'
-import { useSocket } from '@/providers/Socket'
 import { IMessage } from '@/interface/common'
 import { Message } from './Message'
 
@@ -32,7 +31,6 @@ export const ConversationItem: React.FC<IConversationItemProps> = ({
     setReplyingTo,
 }) => {
     const [isShowMore, setIsShowMore] = useState<boolean>(false)
-    const { sendMessage } = useSocket()
 
     const handleRemoveMessage = (messageId: string) => {
         sendMessage(
@@ -40,7 +38,7 @@ export const ConversationItem: React.FC<IConversationItemProps> = ({
                 event: ESocketEvent.REMOVE_MESSAGE,
                 payload: {
                     message: {
-                        conversationId: data?.conversationId,
+                        roomId: data?.roomId,
                         _id: messageId,
                     },
                 },
@@ -131,7 +129,7 @@ export const ConversationItem: React.FC<IConversationItemProps> = ({
                 {participants.map(
                     (other, index) =>
                         index == other.customIndexRead && (
-                            <AvatarWrap key={index} src={other.avatar} size={14} />
+                            <AvatarWrap key={index} src={other.avatarUrl} size={14} />
                         ),
                 )}
             </div>

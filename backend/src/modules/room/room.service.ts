@@ -100,7 +100,8 @@ export class RoomService {
                             indexMessageRead: participant.indexMessageRead.toString(),
                             isOnline: true,
                             username: participant.userId.username,
-                            avatar: participant.userId.avatar,
+                            avatarUrl: participant.userId.avatar,
+                            name: participant.userId.username,
                         };
                         return participantDto;
                     }) || [],

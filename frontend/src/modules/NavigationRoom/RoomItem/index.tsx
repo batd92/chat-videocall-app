@@ -2,30 +2,30 @@
 import { AvatarGroupWrap, AvatarWrap } from '@/components/commons';
 import { SeenIcon, SentIcon } from '@/components/icons';
 import { useAuth } from '@/providers/Auth';
-import { useSocket } from '@/providers/Socket';
-import { IParticipant } from '@/interface/common';
-import { ESocketEvent, IMAGE_TYPE } from '@/utils/constants';
-import { APP_ROUTER } from '@/utils/constants/router';
+import { IMAGE_TYPE } from '@/utils/constants';
 import {
-  displayMessageTime,
   getImage,
   getUserById,
-  truncateString,
+  trunMessage,
 } from '@/utils/helpers';
 import { EllipsisOutlined } from '@ant-design/icons';
 import { Badge } from 'antd';
 import clsx from 'clsx';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import './style.scss';
+import { IRoomDetail } from '@/interface/common/index';
+import { formatDateTime } from '@/utils/helpers/index';
+import { APP_ROUTER } from '@/utils/constants/router';
+import { useRouter } from 'next/navigation'
 
-export const MessageItem = ({ data, rooms, setRooms }) => {
-    const router = useRouter();
-    const { lastMessage, sendMessage } = useSocket();
+interface IProps {
+    room: IRoomDetail
+}
+
+export const RoomItem: React.FC<IProps> = (room: any) => {
     const { currentUser } = useAuth();
-
     const {
-        _id: conversationId,
+        id,
         isGroup,
         participants,
         lastMessage: lastMsg,
@@ -34,14 +34,12 @@ export const MessageItem = ({ data, rooms, setRooms }) => {
         hasOnline,
         name,
         createdAt,
-    } = data;
+    } = room;
 
-    const me = useMemo(
-        () => participants?.find((user: any) => user._id === currentUser?._id),
-        [participants, currentUser?._id]
-    );
-    const unreadMsgMe = useMemo(
-        () => totalMessage - me?.indexMessageRead,
+    const router = useRouter()
+    const me = useMemo(() => participants?.find((user: any) => user._id === currentUser?._id), [participants, currentUser?._id]);
+    const countUnreadMessage= useMemo(
+        () => totalMessage - Number(me?.indexMessageRead || 0),
         [totalMessage, me?.indexMessageRead]
     );
     const currentFriend = useMemo(
@@ -49,11 +47,23 @@ export const MessageItem = ({ data, rooms, setRooms }) => {
         [participants, currentUser?._id]
     );
 
+    /**
+     * Read message unread
+     */
+    const readMessageUnread = () => {
+        alert('move chat detail')
+        if (countUnreadMessage > 0) {
+            
+        }
+        // move chat detail
+        router.push(APP_ROUTER.MESSAGE.CHAT_DETAIL.replace(':id', room?.id))
+      }
+      
     const renderMsgStatus = useCallback(() => {
         if (lastMsg?.userId !== currentUser?._id) {
-            return unreadMsgMe > 0 ? (
+            return countUnreadMessage > 0 ? (
                 <Badge
-                count={unreadMsgMe}
+                count={countUnreadMessage}
                 style={{
                     backgroundColor: 'var(--color-green-1)',
                     display: 'flex',
@@ -68,19 +78,7 @@ export const MessageItem = ({ data, rooms, setRooms }) => {
             );
         }
         return <SentIcon />;
-    }, [lastMsg, currentUser?._id, unreadMsgMe]);
-
-    const handleSeenMessage = useCallback(() => {
-        if (unreadMsgMe > 0) {
-        sendMessage(
-            JSON.stringify({
-            event: ESocketEvent.READ_LAST_MESSAGE,
-            payload: { conversationId },
-            })
-        );
-        }
-        router.push(APP_ROUTER.MESSAGE.CHAT_DETAIL.replace(':id', conversationId));
-    }, [unreadMsgMe, sendMessage, conversationId, router]);
+    }, [lastMsg, currentUser?._id, countUnreadMessage]);
 
     const getMessages = useCallback(() => {
         const { type, deletedAt, content, userId } = lastMsg || {};
@@ -109,65 +107,43 @@ export const MessageItem = ({ data, rooms, setRooms }) => {
             if (isGroup) {
                 const lastUser = getUserById(lastMsg?.userId, participants);
                 const finalMsg = `${lastUser?._id === currentUser?._id && lastMsg?.deletedAt !== 0 ? 'You' : lastUser?.name}: ${getMessages()}`;
-                return truncateString(finalMsg, 30);
+                return trunMessage(finalMsg, 30);
             }
-            return truncateString(getMessages(), 30);
+            return trunMessage(getMessages(), 30);
         }
-        return truncateString('You are now connected to each other', 30);
+        return trunMessage('You are now connected to each other', 30);
     }, [lastMsg, isGroup, participants, currentUser?._id, getMessages]);
 
-    useEffect(() => {
-        if (lastMessage) {
-        const { event, payload } = JSON.parse(lastMessage.data);
-        if (event === ESocketEvent.READ_LAST_MESSAGE) {
-            const currentRoom = rooms?.find((room: any) => room._id === payload?.conversationId);
-            if (currentRoom) {
-                const newCurrentParticipants = currentRoom?.participants?.filter((user: any) => user._id !== currentUser?._id);
-                const me = currentRoom?.participants?.find((user: any) => user?._id === currentUser?._id);
-                const newMe = {
-                    ...me,
-                    indexMessageRead: payload.indexReadLastMessage,
-                    userId: payload.userId,
-                };
-                const newRoomList = rooms?.map((room: any) =>
-                    currentRoom._id === room._id
-                    ? { ...room, participants: [...newCurrentParticipants, newMe] }
-                    : { ...room }
-                );
-                setRooms(newRoomList);
-            }
-        }
-        }
-    }, [lastMessage, currentUser?._id, rooms, setRooms]);
-
     return (
-        <div className="c-message-item" onClick={handleSeenMessage}>
+        <div className="c-message-item" onClick={readMessageUnread}>
             <div className="avatar">
-                {isGroup && !avatarUrl ? (
-                <AvatarGroupWrap users={participants} isOnline={hasOnline} />
-                ) : (
-                <AvatarWrap
-                    size={48}
-                    src={avatarUrl || getImage(currentFriend?.[0]?.avatar, IMAGE_TYPE.AVATAR)}
-                    isOnline={hasOnline}
-                />
+                {isGroup && !avatarUrl ? 
+                (
+                    <AvatarGroupWrap users={participants} isOnline={hasOnline} />
+                ) : 
+                (
+                    <AvatarWrap
+                        size={48}
+                        src={avatarUrl || getImage(currentFriend?.[0]?.avatarUrl, IMAGE_TYPE.AVATAR)}
+                        isOnline={hasOnline}
+                    />
                 )}
             </div>
             <div className="right">
                 <div className="top">
                 <div className="contact-name">
                     {isGroup
-                    ? truncateString(name, 26)
+                    ? trunMessage(name, 26)
                     : currentFriend && currentFriend.length > 0
-                    ? truncateString(currentFriend[0]?.name, 26)
+                    ? trunMessage(currentFriend[0]?.name, 26)
                     : ''}
                 </div>
                 <div className="time">
-                    {displayMessageTime(lastMsg?.createdAt || createdAt)}
+                    {formatDateTime(lastMsg?.createdAt || createdAt)}
                 </div>
                 </div>
                 <div className="bottom">
-                <div className={clsx('summary', unreadMsgMe > 0 && 'summary__unread')}>
+                <div className={clsx('summary', countUnreadMessage > 0 && 'summary__unread')}>
                     {renderMsg}
                 </div>
                 <div className="message-status">

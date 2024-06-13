@@ -28,18 +28,21 @@ export interface IParticipant {
     _id: string
     email: string
     name: string
-    avatar: string | null
+    avatarUrl: string | ''
     indexMessageRead: number
-    isOnline: boolean
+    isOnline: boolean,
+    username: string,
+    userId: string
 }
 
 export interface ITypingUser extends IParticipant {
-    isTyping: boolean
+    isTyping: boolean,
+    avatarUrl: string | ''
 }
 
 export interface IReplyFromMessage {
     _id: string
-    conversationId: string
+    roomId: string
     content: any
     type: 'Text' | 'Call' | 'File' | 'Link'
     userId: string
@@ -50,9 +53,8 @@ export interface IReplyFromMessage {
 }
 
 export interface IMessage {
-    [x: string]: Key | null | undefined
     _id: string
-    conversationId: string
+    roomId: string
     content: any
     type: 'Text' | 'Call' | 'File' | 'Link'
     userId: string
@@ -65,7 +67,7 @@ export interface IMessage {
 }
 
 export interface IRoomDetail {
-    _id: string
+    id: string
     name: string
     isGroup: boolean
     lastMessageId: string
@@ -76,7 +78,7 @@ export interface IRoomDetail {
     createdAt: number
     updatedAt: number
     hasOnline: boolean
-    avatar?: string
+    avatarUrl?: string
 }
 
 export interface IUploadedFile {

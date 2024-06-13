@@ -2,7 +2,10 @@ import { IGetMeResponse } from '..'
 
 export interface IParticipant extends IGetMeResponse {
     indexMessageRead: number
-    isOnline: boolean
+    isOnline: boolean,
+    username: string,
+    avatarUrl: string,
+    userId: string,
 }
 
 export enum TypeFileStorage {
@@ -32,5 +35,5 @@ export interface IGetRoomResponse {
     createdAt: number
     updatedAt: number
     hasOnline: boolean
-    avatar?: string
+    avatarUrl?: string
 }

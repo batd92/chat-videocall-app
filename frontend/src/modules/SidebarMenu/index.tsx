@@ -18,11 +18,11 @@ import { IMessage } from '@/interface/common'
 interface IProps {
     open: boolean
     cancel: () => void
-    avatar: React.ReactNode
+    avatarUrl: React.ReactNode
     name: string | undefined
     status: React.ReactNode
     roomDetail: IGetRoomResponse
-    setRoomDetailLocal: (data: IGetRoomResponse) => void
+    setRoomCurrentSelected: (data: IGetRoomResponse) => void
     refresh?: () => void
     handleRedirectSearch: (e: any) => void
 }
@@ -30,12 +30,11 @@ interface IProps {
 const SidebarMenu: React.FC<IProps> = ({
     open,
     cancel,
-    avatar,
+    avatarUrl,
     name,
     status,
     roomDetail,
-    setRoomDetailLocal,
-    refresh,
+    setRoomCurrentSelected,
     handleRedirectSearch,
 }) => {
     const [isUpdateName, setIsUpdateName] = useState(false)
@@ -62,9 +61,9 @@ const SidebarMenu: React.FC<IProps> = ({
         const searchText = e.target.value
         if (searchText === '') {
             setOfficialMessages([])
-            setParams((prev) => ({ ...prev, lastRecord: '' }))
+            setParams((prev: any) => ({ ...prev, lastRecord: '' }))
         } else {
-            setParams((prev) => ({ ...prev, lastRecord: '', keyword: JSON.stringify(searchText) }))
+            setParams((prev: any) => ({ ...prev, lastRecord: '', keyword: JSON.stringify(searchText) }))
         }
     }, [])
 
@@ -74,21 +73,21 @@ const SidebarMenu: React.FC<IProps> = ({
         {
             enabled: params.keyword !== '',
             onSuccess: (response: any) => {
-                const result = response?.data?.data
+                const result = response?.data;
                 if (!result?.length) {
-                    setParams((prev) => ({ ...prev, lastRecord: '' }))
+                    setParams((prev: any) => ({ ...prev, lastRecord: '' }))
                 }
                 setOfficialMessages((prev) =>
                     !params.lastRecord ? [...result.reverse()] : [...prev, ...result.reverse()]
                 )
-                setParams((prev) => ({ ...prev, lastRecord: JSON.stringify(response?.data?.lastRecord) }))
+                setParams((prev: any) => ({ ...prev, lastRecord: JSON.stringify(response?.data?.lastRecord) }))
             },
         }
     )
 
-    const items: CollapseProps['items'] = useMemo(() => {
+    const collapseItems: CollapseProps['items'] = useMemo(() => {
         if (!roomDetail?._id) return []
-        const temp: CollapseProps['items'] = [
+        const collapseItems: CollapseProps['items'] = [
             {
                 key: '3',
                 label: 'Media files, files and links',
@@ -96,7 +95,7 @@ const SidebarMenu: React.FC<IProps> = ({
             }
         ]
         if (roomDetail?.isGroup) {
-            temp.unshift(
+            collapseItems.unshift(
                 {
                     key: '1',
                     label: 'Customize chat',
@@ -106,7 +105,7 @@ const SidebarMenu: React.FC<IProps> = ({
                                 <EditOutlined />
                                 <span>Rename the chat</span>
                             </Button>
-                            <UploadAvatar roomDetail={roomDetail} setRoomDetailLocal={setRoomDetailLocal} />
+                            <UploadAvatar roomDetail={roomDetail} setRoomCurrentSelected={setRoomCurrentSelected} />
                         </div>
                     ),
                 },
@@ -115,22 +114,25 @@ const SidebarMenu: React.FC<IProps> = ({
                     label: 'Member in the chat',
                     children: <MemberList participants={roomDetail.participants} onAddMemberClick={handleAddmembers} />,
                 },
-                {
-                    key: '4',
-                    label: 'Leave room',
-                    children: (
-                        <div className='list-button'>
-                            <Button>
-                                <LogoutOutlined />
-                                <span>Leave the group</span>
-                            </Button>
-                        </div>
-                    ),
-                }
+                
             )
         }
-        return temp
-    }, [roomDetail, setRoomDetailLocal, handleUpdateName, handleAddmembers])
+        collapseItems.push(
+            {
+                key: '4',
+                label: 'Leave room',
+                children: (
+                    <div className='list-button'>
+                        <Button>
+                            <LogoutOutlined />
+                            <span>Leave the group</span>
+                        </Button>
+                    </div>
+                ),
+            }
+        )
+        return collapseItems
+    }, [roomDetail, setRoomCurrentSelected, handleUpdateName, handleAddmembers])
 
     const handleOkNewRoomModal = useCallback(() => {
         setIsUpdateName(false)
@@ -147,12 +149,14 @@ const SidebarMenu: React.FC<IProps> = ({
             {!mediaActivedKey ? (
                 <>
                     <div className='c-message-menu__header'>
-                        {avatar}
-                        <h3>{name}</h3>
-                        <p>{status}</p>
+                        {avatarUrl}
+                        <h3>Name: {name}</h3>
+                        <br></br>
                         <div className='c-message-menu__header__search'>
+                            <br></br>
                             <SearchInput value={valueSearch} onChange={handleSearchMessages} />
                         </div>
+                        <br></br>
                         {officialMessages.length > 0 && (
                             <MessageList
                                 messages={officialMessages}
@@ -165,7 +169,7 @@ const SidebarMenu: React.FC<IProps> = ({
                         )}
                     </div>
                     <div className='c-message-menu__content'>
-                        <Collapse items={items} bordered={false} expandIconPosition='end' />
+                        <Collapse items={collapseItems} bordered={false} expandIconPosition='end' />
                     </div>
                     {(isUpdateName || isAddMembers) && (
                         <ModalNewRoom

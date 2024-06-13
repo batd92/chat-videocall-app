@@ -100,7 +100,7 @@ const CreateRoom: React.FC<IProps> = ({
                 >
                 {users.map((user: any) => (
                     <Select.Option key={user._id} value={user._id}>
-                    <Avatar src={user.avatar} />
+                    <Avatar src={user.avatarUrl} />
                     &nbsp;&nbsp;{user.firstName + user.lastName}
                     </Select.Option>
                 ))}

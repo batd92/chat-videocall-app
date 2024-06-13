@@ -33,7 +33,7 @@
         "**/*.ts",
         "**/*.tsx",
         ".next/types/**/*.ts"
-    ],
+, "src/modules/Message/MessageContent/hooks/useFetchMessages.ts"    ],
     "exclude": [
         "node_modules"
     ]

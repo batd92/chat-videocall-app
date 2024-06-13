@@ -11,7 +11,7 @@ import './style.scss';
 import { debounce } from 'lodash';
 import { IParticipant } from '@/interface/response';
 import { useAuth } from '@/providers/Auth';
-import { getImage, truncateString } from '@/utils/helpers';
+import { getImage, trunMessage } from '@/utils/helpers';
 import { useRouter } from 'next/navigation';
 import { APP_ROUTER } from '@/utils/constants/router';
 import { IRoomDetail } from '@/interface/common';
@@ -145,8 +145,8 @@ export const RoomSearch = ({ setIsSearch }: IProps) => {
                     </div>
                     <div className='name'>
                         {room?.name
-                        ? truncateString(room?.name, 26)
-                        : truncateString(currentFriend[0].name, 26)}
+                        ? trunMessage(room?.name, 26)
+                        : trunMessage(currentFriend[0].name, 26)}
                     </div>
                     </div>
                 );

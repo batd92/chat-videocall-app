@@ -11,7 +11,7 @@ export const TypingItem: React.FC<IProps> = ({ data }) => {
     return (
         <div className='c-typing-item'>
             <div className='left'>
-                <AvatarWrap size={28} src={data?.avatar!} />
+                <AvatarWrap size={28} src={data?.avatarUrl!} />
             </div>
             <div className='right'>
                 <DotsLoadingIcon />

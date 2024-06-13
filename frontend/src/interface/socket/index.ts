@@ -1,7 +1,7 @@
 import { IGetRoomResponse } from '../response/room'
 
-export type TypeDataConversation = {
-    conversation: IGetRoomResponse
+export type TypeDataRoom = {
+    room: IGetRoomResponse
     roomName: string
     token: string
 }

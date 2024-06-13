@@ -28,7 +28,8 @@
     "react-query": "^3.39.3",
     "react-use-websocket": "^4.5.0",
     "sass": "^1.69.5",
-    "simple-peer": "^9.11.1"
+    "simple-peer": "^9.11.1",
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",

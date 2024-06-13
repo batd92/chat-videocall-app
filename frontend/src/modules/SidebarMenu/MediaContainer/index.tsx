@@ -67,7 +67,9 @@ const MediaContainer: React.FC<MediaContainerProps> = ({ mediaKey, list, onBack 
     return (
         <div className='media-container'>
             <Button onClick={onBack}>Back</Button>
-            <h2>{renderIcon()} {mediaKey}</h2>
+            <h2>
+                <br></br>
+                {renderIcon()} {mediaKey}</h2>
             <div className='media-content'>
                 {renderMediaContent()}
             </div>

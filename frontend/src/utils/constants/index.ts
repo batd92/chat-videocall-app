@@ -13,6 +13,7 @@ export enum NOTIFICATION_STATUS {
     WARNING = 'warning',
 }
 
+
 export enum ESocketEvent {
     ERROR = 'ERROR',
 
@@ -33,11 +34,8 @@ export enum ESocketEvent {
     SEND_MESSAGE = 'SEND_MESSAGE',
     REMOVE_MESSAGE = 'REMOVE_MESSAGE',
     READ_LAST_MESSAGE = 'READ_LAST_MESSAGE',
-
     TYPING_MESSAGE = 'TYPING_MESSAGE',
-
-    PING = 'PING',
-    PONG = 'PONG',
+    ACTION_MESSAGE = "ACTION_MESSAGE"
 }
 
 export enum IMAGE_TYPE {

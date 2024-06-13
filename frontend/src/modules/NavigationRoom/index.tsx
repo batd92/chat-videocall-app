@@ -1,24 +1,21 @@
 'use client'
 import { SpinWrap } from '@/components/commons'
 import { PlusIcon } from '@/components/icons'
-import { useSocket } from '@/providers/Socket'
 import { RoomService } from '@/services'
 import { ENDPOINT } from '@/services/endpoint'
 import { IGetRoomsRequest } from '@/interface/request'
-import { ESocketEvent } from '@/utils/constants'
 import { SearchOutlined } from '@ant-design/icons'
 import { Input, InputRef, Tooltip } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import { useQuery } from 'react-query'
-import { MessageItem } from '../Message/MessageItem'
+import { RoomItem } from '../NavigationRoom/RoomItem'
 import AccountDropdown from '../Accounts'
 import ModalNewRoom from '../Room/ModalRoom/CreateRoom'
 import './style.scss'
 import { RoomSearch } from './RoomSearch'
 
 export const NavigationRoom = () => {
-    const { lastMessage } = useSocket()
     const [isOpenCreateRoom, setIsOpenCreateRoom] = useState(false)
     const [rooms, setRooms] = useState<any>([])
     const [isSearch, setIsSearch] = useState(false)
@@ -45,39 +42,6 @@ export const NavigationRoom = () => {
         },
         },
     )
-
-    useEffect(() => {
-        if (lastMessage) {
-            const data = JSON.parse(lastMessage.data)
-            const { event, payload } = data
-            switch (event) {
-                case ESocketEvent.SEND_MESSAGE:
-                    const result = rooms.filter((e: any) => e._id != payload?.conversation._id)
-                    result.unshift(payload?.conversation)
-                    setRooms(result)
-                    break
-                case ESocketEvent.REMOVE_MESSAGE:
-                    const results = rooms?.map((room: any) => {
-                        if (room?._id === payload?.conversationId) {
-                            return {
-                                ...room,
-                                lastMessage: {
-                                ...room.lastMessage,
-                                deletedAt: payload?.message?.deletedAt,
-                                },
-                            }
-                        }
-                        return room
-                    })
-                    setRooms(results)
-                    break
-                default:
-                    console.log(event, payload)
-                    break
-        }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [lastMessage])
 
     const handleNewRoomClick = () => {
         setIsOpenCreateRoom(true)
@@ -133,11 +97,9 @@ export const NavigationRoom = () => {
                     loader={<h4>Loading...</h4>}
                 >
                     {rooms?.map((room: any) => (
-                    <MessageItem
+                    <RoomItem
                         key={room?._id}
-                        data={room}
-                        rooms={rooms}
-                        setRooms={setRooms}
+                        room={room}
                     />
                     ))}
                 </InfiniteScroll>

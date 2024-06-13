@@ -38,7 +38,7 @@ const MessageList: React.FC<MessageListProps> = ({
                                 {messageGroup.userId === participant._id && (
                                     <div style={{ display: 'flex', gap: '10px' }}>
                                         <div className='list-member'>
-                                            <AvatarWrap size={42} src={participant.avatar} />
+                                            <AvatarWrap size={42} src={participant.avatarUrl} />
                                         </div>
                                         <div style={{ width: '100%' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>

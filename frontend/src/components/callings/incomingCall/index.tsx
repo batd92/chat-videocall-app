@@ -38,11 +38,11 @@ const IncomingCall: React.FC<IModalWrap> = ({
                                         <h1 className='name'>
                                             <strong>{conversation.name}</strong>
                                         </h1>
-                                        {conversation.participants.map((participant) => (
+                                        {conversation.participants.map((participant: any) => (
                                             <Avatar
                                                 className='avatar'
                                                 key={participant._id}
-                                                src={participant.avatar}
+                                                src={participant.avatarUrl}
                                                 alt='description of image'
                                             />
                                         ))}
@@ -54,7 +54,7 @@ const IncomingCall: React.FC<IModalWrap> = ({
                                         </h1>
                                         <Avatar
                                             className='avatar'
-                                            src={participantFirst?.avatar}
+                                            src={participantFirst?.avatarUrl}
                                             alt='description of image'
                                         />
                                     </div>
