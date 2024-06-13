@@ -153,8 +153,9 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
      */
     const onStartCall = (roomId: string) => {
         setIsStartCall(true)
+        
+        // TODO:
         // send event start call to socket
-    
         const timerIdCancel = setTimeout(() => {
             onCancelCall(roomId)
         }, TIMEOUT_CALL)
@@ -168,6 +169,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     const onEndCall = (roomId: string) => {
         setIsOpenMeeting(false)
         setRoomTalkingInJitsi(undefined)
+        // TODO:
         // send event end call to socket
     }
 
@@ -177,6 +179,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
      */
     const onCancelCall = (roomId: string) => {
         setIsStartCall(false)
+        // TODO:
         // send event cancel call to socket
         clearTimeout(timerId as unknown as number)
     }
@@ -185,7 +188,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
      * Open room detail
      */
      const openRoomDetail = () => {
-        setIsOpen((prevState) => !prevState)
+        setIsOpen((prevState: any) => !prevState)
         fetchRoomDetail()
     }
 
