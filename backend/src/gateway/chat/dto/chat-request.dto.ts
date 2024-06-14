@@ -1,18 +1,40 @@
-import { IsNotEmpty, IsArray, ValidateNested, Min, IsNumber } from 'class-validator';
-import { TypeStorageFile, BaseRequest, ActionType } from '../../base-dto/base.request';
+import { IsNotEmpty, IsArray, ValidateNested, Min, IsNumber, IsOptional } from 'class-validator';
+import { TypeStorageFile, BaseRequest, ActionType, BaseCommon } from '../../base-dto/base.request';
 
-export class TextRequest extends BaseRequest {
+/**
+ * Text send
+ */
+
+ export class TextMessage extends BaseCommon {
     @IsNotEmpty()
     readonly content: string;
 }
+export class TextRequest extends BaseRequest {
+    @IsNotEmpty()
+    readonly body: TextMessage;
+}
+
+/**
+ * Remove message
+ */
 export class RemoveMessageRequest extends BaseRequest {
     @IsNotEmpty()
     readonly messageId: string;
 }
+
+/**
+ * Upload
+ */
 export class UploadFileRequest extends BaseRequest {
     @IsArray()
     @ValidateNested()
-    files: FileRequest[];
+    body: FileRequest[];
+
+    @IsOptional()
+    readonly replyFromId: string;
+
+    @IsNotEmpty()
+    readonly type: string;
 }
 export class FileRequest {
     @IsNotEmpty()
@@ -28,6 +50,10 @@ export class FileRequest {
     @Min(5000)
     size: number;
 }
+
+/**
+ * make action
+ */
 export class MakeActionRequest extends BaseRequest {
     @IsNotEmpty()
     action: number;

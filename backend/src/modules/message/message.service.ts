@@ -1,23 +1,24 @@
 import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
 import { EMPTY, from, Observable, of, throwError } from 'rxjs';
-import { catchError, map, mergeMap, throwIfEmpty } from 'rxjs/operators';
+import { catchError, map, mergeMap, throwIfEmpty, tap } from 'rxjs/operators';
 import { MESSAGE_MODEL } from '../../database/constants';
-import { LINK, TEXT, VIDEO, FILE } from './dto/create-message.dto';
 import { Message } from '../../database/schemas/message.schema';
 import { QueryMessageDto } from './dto/query-message.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TextRequest, RemoveMessageRequest, UploadFileRequest, MakeActionRequest } from '../../gateway/chat/dto/chat-request.dto';
 import { BaseRequest } from '../../gateway/base-dto/base.request';
 import { MessageDto } from './dto/response.message.dto';
+import { VideoCallRequest } from 'gateway/video-call/dto/video-call.request.dto';
+import { TypeMessage } from '../../constants/global.enum';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable({ scope: Scope.DEFAULT })
 export class MessageService {
     constructor(
         @Inject(MESSAGE_MODEL) private messageModel: Model<Message>,
         private readonly eventEmitter: EventEmitter2
     ) {
-
+        console.log('MessageService init ...')
     }
 
     findAll(inquery: QueryMessageDto, roomId: string): Observable<{ data: Partial<Message[]>; status: string }> {
@@ -30,7 +31,7 @@ export class MessageService {
             const cursor = (new Types.ObjectId(inquery.next_cursor)).getTimestamp().getTime();
             query = query.where('_id').lt(cursor);
         }
-
+        query = query.sort({ createdAt: -1 });
         return from(
             query
                 .skip(inquery.skip)
@@ -101,11 +102,20 @@ export class MessageService {
      * @param data 
      * @returns 
      */
-    async onMessageFromSocket(data: TextRequest): Promise<void> {
-        const message: Message = await this.messageModel.create(this.buildMessageRequest(data));
-        this.eventEmitter.emit('newMessage', message);
+    onMessageFromSocket(data: TextRequest): Observable<Message> {
+        return from(this.messageModel.create(this.buildMessageRequest(data))).pipe(
+            // populate('userId') trả về các thuộc tính: _id email username avatar
+            mergeMap((message) => from(this.messageModel.populate(message, {
+                    path: 'userId',
+                    select: '_id email username avatar'
+                })
+            )),
+            mergeMap((messageWithUserId) => from(messageWithUserId.populate('replyFromId'))),
+            tap((messageRelationship) => {
+                this.eventEmitter.emit('newMessage', messageRelationship);
+            })
+        );
     }
-
 
     /**
      * Remove message from socket
@@ -175,12 +185,13 @@ export class MessageService {
      * @returns 
      */
     buildMessageRequest(message: TextRequest) {
+        console.log('message', message)
         return {
-            content: message.content,
+            content: message.body.content,
             roomId: message.roomId,
-            type: /^(ftp|http|https):\/\/[^ "]+$/.test(message.content.toString()) ? LINK : TEXT,
+            type: /^(ftp|http|https):\/\/[^ "]+$/.test(message.body.content.toString()) ? TypeMessage.LINK : TypeMessage.TEXT,
             userId: message.userId,
-            replyFromId: message.replyFromId || ''
+            replyFromId: message.body.replyFromId || undefined
         }
     }
 
@@ -191,11 +202,12 @@ export class MessageService {
      */
     private buildFileRequest(message: UploadFileRequest) {
         return {
-            content: message.files,
+            content: message.body,
             roomId: message.roomId,
             type: message.type,
             userId: message.userId,
-            replyFromId: message.replyFromId || ''
+            replyFromId: message.replyFromId || '',
+            actions: []
         };
     }
 
@@ -204,13 +216,12 @@ export class MessageService {
      * @param message 
      * @returns 
      */
-    buildCallVideoRequest(message: TextRequest) {
+    buildCallVideoRequest(message: VideoCallRequest) {
         return {
-            content: message.content,
+            content: message.body.content,
             roomId: message.roomId,
-            type: message.type,
+            type: message.body.type,
             userId: message.userId,
-            replyFromId: message.replyFromId || ''
         }
     }
 }

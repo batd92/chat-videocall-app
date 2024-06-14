@@ -3,7 +3,8 @@ export enum TypeMessage {
     FILE = "File",
     MEDIA = "Media",
     CALL = "Call",
-    NOTIFY = "Notify"
+    NOTIFY = "Notify",
+    LINK = "Link"
 }
 
 export enum StatusJitsiMeet {

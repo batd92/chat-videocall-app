@@ -1,33 +1,36 @@
-import React, { useCallback, useState } from "react";
+import React, { FormEvent, useCallback, useEffect, useState } from "react";
 import { Button, Input } from "antd";
 import { useMutation } from "react-query";
-import { ESocketEvent, UPLOAD_FILE_STATUS, UPLOAD_LIST_TYPE } from "@/utils/constants";
+import { UPLOAD_FILE_STATUS, UPLOAD_LIST_TYPE } from "@/utils/constants";
 import { convertLinkToFileObject, convertToFileObjectAntd, getFileType, notificationMessage } from "@/utils/helpers";
 import { UploadService } from "@/services/upload";
 import { IMessage, IUploadedFile } from "@/interface/common";
 import { UploadWrap } from "@/components/commons";
 import { AttachmentIcon } from "@/components/icons";
-import { ReplyFooter } from "./Reply";
+import { ReplyMessage } from "./ReplyMessage";
+import useChat from "@/services/socket/useChat";
+import useTyping from "@/services/socket/useTyping";
 
 interface IProps {
     roomId: string;
-    setIsTyping: (value: boolean) => void;
-    isTyping: boolean;
-    replyingTo: IMessage | null;
-    setReplyingTo: (msg: IMessage | null) => void;
+    messageTo: IMessage | null
 }
 
-export const AreaChat: React.FC<IProps> = ({
+export const ChatRoom: React.FC<IProps> = ({
     roomId,
-    setIsTyping,
-    isTyping,
-    replyingTo,
-    setReplyingTo,
+    messageTo
 }: IProps) => {
+    const {
+        sendMessage,
+        startTypingMessage,
+        stopTypingMessage,
+    } = useChat(roomId as string);
+
     const [showAttachment, setShowAttachment] = useState<boolean>(false);
     const [inqueryMessage, setInQueryMessage] = useState('');
     const [uploadedFiles, setUploadedFiles] = useState<IUploadedFile[]>([]);
-
+    const { isTyping, startTyping, stopTyping, cancelTyping } = useTyping();
+    
     const { mutateAsync: uploadMedia } = useMutation(
         (file: any) => UploadService.uploadMedia(file),
         {
@@ -63,15 +66,19 @@ export const AreaChat: React.FC<IProps> = ({
     }, [uploadMedia]);
 
     /**
-     * Typing message
+     * Check typing message
      */
-    const onTypingMessage = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setInQueryMessage(e.target.value);
-        setIsTyping(!!e.target.value);
+    useEffect(() => {
+        if (isTyping) startTypingMessage();
+        else stopTypingMessage();
+    }, [isTyping]);
 
-        // send typing to socket
-        //alert('send typing to socket');
-    }, [roomId, setIsTyping]);
+    /**
+     * Change message
+     */
+    const onChangeMessage = (event: FormEvent<HTMLInputElement>) => {
+        setInQueryMessage(event.currentTarget.value.replace(/<\/?[^>]*>/g, ""));
+    };
 
     /**
      * Remove file
@@ -86,19 +93,19 @@ export const AreaChat: React.FC<IProps> = ({
     /**
      * Send message to server by socket
      */
-    const onSendMessageToServer = useCallback(() => {
-        if (!inqueryMessage) return;
-        if (!uploadedFiles || uploadedFiles.length === 0) return;
+    const onSendMessageToServer = (event: FormEvent<HTMLInputElement>) => {
+        console.log('onSendMessageToServer ...', inqueryMessage)
+        event.preventDefault();
+        cancelTyping();
 
         // build payload
         const payloadBase = {
-            roomId: roomId,
-            replyFromId: replyingTo?._id ? replyingTo._id: '',
+            replyFromId: messageTo?._id ? messageTo._id : '',
         };
 
         // send file
         if (uploadedFiles.length > 0) {
-            const payload = {
+            const payloadFile = {
                 ...payloadBase,
                 type: 'File',
                 content: uploadedFiles.map((file: IUploadedFile) => ({
@@ -109,9 +116,11 @@ export const AreaChat: React.FC<IProps> = ({
                 })),
             };
             // send messsge to socket
+            sendMessage(payloadFile);
+
+            setInQueryMessage('');
             setUploadedFiles([]);
             setShowAttachment(false);
-            alert('send file');
         }
 
         // send text
@@ -121,18 +130,15 @@ export const AreaChat: React.FC<IProps> = ({
                 type: 'Text',
                 content: inqueryMessage,
             };
-
+            sendMessage(payloadText);
             setInQueryMessage('');
-            alert('send text');
         }
-
-        setReplyingTo(null);
-    }, [roomId, uploadedFiles, replyingTo, setUploadedFiles, setShowAttachment, setInQueryMessage, setReplyingTo]);
+    };
 
     return (
         <div>
-            {replyingTo && (
-                <ReplyFooter replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
+            {messageTo && (
+                <ReplyMessage replyingTo={messageTo} />
             )}
             <div className='footer footer-new-chat'>
                 <Button
@@ -154,10 +160,12 @@ export const AreaChat: React.FC<IProps> = ({
                     <Input.TextArea
                         className='msg-input-inner'
                         placeholder='Type your message here...'
-                        onChange={onTypingMessage}
-                        value={inqueryMessage}
-                        autoSize={{ minRows: 1, maxRows: 6 }}
                         maxLength={2000}
+                        autoSize={{ minRows: 1, maxRows: 6 }}
+                        onChange={onChangeMessage}
+                        value={inqueryMessage}
+                        onKeyPress={startTyping}
+                        onKeyUp={stopTyping}
                     />
                 </div>
                 <Button

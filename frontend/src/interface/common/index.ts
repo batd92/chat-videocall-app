@@ -35,9 +35,11 @@ export interface IParticipant {
     userId: string
 }
 
-export interface ITypingUser extends IParticipant {
-    isTyping: boolean,
-    avatarUrl: string | ''
+export interface ITypingUser {
+    userId: string
+    avatarUrl: string
+    senderId: string
+    isTyping: boolean
 }
 
 export interface IReplyFromMessage {

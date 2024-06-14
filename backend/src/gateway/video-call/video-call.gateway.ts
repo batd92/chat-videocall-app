@@ -31,7 +31,9 @@ export class VideoCallGateway {
         private readonly roomService: RoomService,
         private readonly jitsiorgService: JitsiorgService,
         private readonly socketStateService: SocketStateService,
-    ) { }
+    ) {
+        console.log('socketStateService ', socketStateService)
+     }
 
     /**
      * Start the call
@@ -54,7 +56,7 @@ export class VideoCallGateway {
                 }
                 // get Jitsi Token
                 const jitsiToken = await this.jitsiorgService.getInfoJitsi(payload);
-                return { event: START_CALL_EVENT, data: payload, userId: payload.userId, jitsiToken: jitsiToken.token };
+                return { event: START_CALL_EVENT, data: payload, userId: payload.userId, jitsiToken: jitsiToken.token, roomId: payload.roomId };
             }),
             catchError((error) => {
                 socket.emit('error', error.message);
@@ -87,7 +89,7 @@ export class VideoCallGateway {
                 if (roomDB.userJoined.find(u => u.userId === payload.userId)) {
                     throw new BadGatewayException(`User in call.`);
                 }
-                return { event: JOIN_CALL_EVENT, data: payload, userId: payload.userId };
+                return { event: JOIN_CALL_EVENT, data: payload, userId: payload.userId, roomId: payload.roomId };
             }),
             catchError((error) => {
                 socket.emit('error', error.message);
@@ -125,7 +127,7 @@ export class VideoCallGateway {
                 if (roomDB.userJoined.filter(us => us.userId !== payload.userId).length <= 1) {
                     eventName = END_CALL_EVENT;
                 }
-                return { event: eventName, data: payload, userId: payload.userId };
+                return { event: eventName, data: payload, userId: payload.userId, roomId: payload.roomId };
             }),
             catchError((error) => {
                 socket.emit('error', error.message);
@@ -158,7 +160,7 @@ export class VideoCallGateway {
                 if ((roomDB.userJoined.find(u => u.userId === payload.userId))) {
                     throw new BadGatewayException(`User in call.`);
                 }
-                return { event: REJECT_CALL_EVENT, data: payload, userId: payload.userId };
+                return { event: REJECT_CALL_EVENT, data: payload, userId: payload.userId, roomId: payload.roomId };
             }),
             catchError((error) => {
                 socket.emit('error', error.message);

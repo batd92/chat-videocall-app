@@ -10,7 +10,7 @@ import { ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
 import './style.scss';
 import { debounce } from 'lodash';
 import { IParticipant } from '@/interface/response';
-import { useAuth } from '@/providers/Auth';
+import { useAuth } from '@/providers/auth';
 import { getImage, trunMessage } from '@/utils/helpers';
 import { useRouter } from 'next/navigation';
 import { APP_ROUTER } from '@/utils/constants/router';

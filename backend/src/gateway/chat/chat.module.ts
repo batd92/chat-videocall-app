@@ -6,7 +6,7 @@ import { MessageModule } from '../../modules/message/message.module';
 
 @Module({
     imports: [
-        RoomModule, // Import RoomModule
+        RoomModule,
         MessageModule,
         MulterModule.register({ dest: './uploads' })
     ],

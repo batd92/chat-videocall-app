@@ -17,3 +17,8 @@ export class FileResponse {
     readonly file_name: string;
     readonly size: number;
 }
+
+export interface BaseWsResponse<T> {
+    event: string;  // Event name for WebSocket response
+    data: T;        // Data payload, can be of any type
+}

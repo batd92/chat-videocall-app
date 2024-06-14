@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { AvatarGroupWrap, AvatarWrap } from '@/components/commons';
 import { SeenIcon, SentIcon } from '@/components/icons';
-import { useAuth } from '@/providers/Auth';
+import { useAuth } from '@/providers/auth';
 import { IMAGE_TYPE } from '@/utils/constants';
 import {
   getImage,
@@ -17,13 +17,13 @@ import { IRoomDetail } from '@/interface/common/index';
 import { formatDateTime } from '@/utils/helpers/index';
 import { APP_ROUTER } from '@/utils/constants/router';
 import { useRouter } from 'next/navigation'
+import useChat from '@/services/socket/useChat';
 
 interface IProps {
     room: IRoomDetail
 }
 
-export const RoomItem: React.FC<IProps> = (room: any) => {
-    const { currentUser } = useAuth();
+export const RoomItem: React.FC<IProps> = ({ room }) => {
     const {
         id,
         isGroup,
@@ -36,13 +36,19 @@ export const RoomItem: React.FC<IProps> = (room: any) => {
         createdAt,
     } = room;
 
+    const { currentUser } = useAuth();
+    const {
+        joinRoom
+    } = useChat(room.id as string);
+
     const router = useRouter()
     const me = useMemo(() => participants?.find((user: any) => user._id === currentUser?._id), [participants, currentUser?._id]);
     const countUnreadMessage= useMemo(
         () => totalMessage - Number(me?.indexMessageRead || 0),
         [totalMessage, me?.indexMessageRead]
     );
-    const currentFriend = useMemo(
+    
+    const friends = useMemo(
         () => participants?.filter((person: any) => person._id !== currentUser?._id),
         [participants, currentUser?._id]
     );
@@ -55,6 +61,7 @@ export const RoomItem: React.FC<IProps> = (room: any) => {
         if (countUnreadMessage > 0) {
             
         }
+        joinRoom();
         // move chat detail
         router.push(APP_ROUTER.MESSAGE.CHAT_DETAIL.replace(':id', room?.id))
       }
@@ -124,7 +131,7 @@ export const RoomItem: React.FC<IProps> = (room: any) => {
                 (
                     <AvatarWrap
                         size={48}
-                        src={avatarUrl || getImage(currentFriend?.[0]?.avatarUrl, IMAGE_TYPE.AVATAR)}
+                        src={avatarUrl || getImage(friends?.[0]?.avatarUrl, IMAGE_TYPE.AVATAR)}
                         isOnline={hasOnline}
                     />
                 )}
@@ -134,8 +141,8 @@ export const RoomItem: React.FC<IProps> = (room: any) => {
                 <div className="contact-name">
                     {isGroup
                     ? trunMessage(name, 26)
-                    : currentFriend && currentFriend.length > 0
-                    ? trunMessage(currentFriend[0]?.name, 26)
+                    : friends && friends.length > 0
+                    ? trunMessage(friends[0]?.username, 26)
                     : ''}
                 </div>
                 <div className="time">

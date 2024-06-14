@@ -13,7 +13,7 @@ export class RoomDataInitializerService implements OnModuleInit {
     ) { }
 
     async onModuleInit(): Promise<void> {
-        console.log('(RoomDataInitializerService) is initialized...');
+        // console.log('(RoomDataInitializerService) is initialized...');
         
         // await this.roomModel.deleteMany({});
         // await this.participantModel.deleteMany({});

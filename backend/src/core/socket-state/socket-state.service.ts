@@ -18,29 +18,21 @@ export class SocketStateService {
     private roomStates = new Map<string, IRoomState>();
 
     public addSocket(userId: string, socket: ISocket): boolean {
-        //socket.id = v4();
-
         const sockets = this.socketIdsState.get(userId) || [];
         const existingSocket = sockets.find(id => id === socket.id);
         if (existingSocket) return false;
-
         this.socketIdsState.set(userId, [...sockets, socket.id]);
-        console.log('socket connected ...', sockets);
     }
 
     public addUserJoinRoom(roomId: string, userId: string, socket: Socket): boolean {
-        //socket.id = v4();
-        console.log(socket);
         const roomUsernameSockets = this.roomUsernameSockets.get(roomId) || [];
-        if (roomUsernameSockets.length > 1) {
-            return false;
-        }
         const existingUsernameRecord = roomUsernameSockets.find(us => us.userId === userId);
         if (existingUsernameRecord) return false;
 
         this.roomUsernameSockets.set(roomId, [...roomUsernameSockets, { username: '', socketId: socket.id, userId }]);
         this.socketState.set(socket.id, socket);
         this.socketRoomState.set(socket.id, roomId);
+        console.log('Room: ', this.roomUsernameSockets.get(roomId));
     }
 
     public removeSocket(socket: ISocket) {
@@ -65,7 +57,7 @@ export class SocketStateService {
     }
 
     public getAllSocketForRoom(roomId: string): Array<IUserameSocket> {
-        return this.roomUsernameSockets.get(roomId);
+        return this.roomUsernameSockets.get(roomId) || [];
     }
 
     public getRoomState(payload: VideoCallRequest, socket: Socket): IRoomState {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/providers/Auth'
+import { useAuth } from '@/providers/auth'
 import { AuthService } from '@/services'
 import { APP_ROUTER } from '@/utils/constants/router'
 import { notificationMessage, pickData } from '@/utils/helpers'
@@ -8,7 +8,7 @@ import { Button, Form, Input, message } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useMutation } from 'react-query'
 import './style.scss'
-import { useFcmToken } from '@/providers/FcmToken'
+import { useFcmToken } from '@/providers/fcm-token'
 
 const LoginPage = () => {
     const router = useRouter()

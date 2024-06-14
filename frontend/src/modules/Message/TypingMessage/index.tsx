@@ -1,17 +1,18 @@
 import { AvatarWrap } from '@/components/commons'
 import { DotsLoadingIcon } from '@/components/icons'
-import { IGetMeResponse } from '@/interface/response'
 import './style.scss'
+import { ITypingUser } from '@/interface/common'
 
 interface IProps {
-    data: IGetMeResponse
+    user: ITypingUser
 }
 
-export const TypingItem: React.FC<IProps> = ({ data }) => {
+export const TypingMessage: React.FC<IProps> = ({ user }) => {
+    console.log('TypingMessage data: ', user);
     return (
         <div className='c-typing-item'>
             <div className='left'>
-                <AvatarWrap size={28} src={data?.avatarUrl!} />
+                <AvatarWrap size={28} src={user?.avatarUrl!} />
             </div>
             <div className='right'>
                 <DotsLoadingIcon />

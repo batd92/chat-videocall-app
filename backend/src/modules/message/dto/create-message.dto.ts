@@ -21,8 +21,3 @@ export class CreateMessageDto {
     @IsOptional()
     readonly files?: FileContent[];
 }
-
-export const FILE = 'FILE';
-export const TEXT = 'TEXT';
-export const LINK = 'LINK';
-export const VIDEO = 'VIDEO';

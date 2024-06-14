@@ -1,5 +1,4 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
-import { Participant } from 'database/schemas/participant.schema';
 import { Model } from 'mongoose';
 import { EMPTY, from, Observable, of, switchMap, throwError } from 'rxjs';
 import { catchError, map, mergeMap, throwIfEmpty } from 'rxjs/operators';
@@ -13,24 +12,26 @@ import { ParticipantDto, ResRoomDto } from './dto/response.room.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Message } from '../../database/schemas/message.schema';
 import { IParticipant } from 'modules/participant/interface/interface-participant';
+import { IRoom } from 'gateway/chat/interface/base';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable({ scope: Scope.DEFAULT })
 export class RoomService {
     constructor(
         @Inject(ROOM_MODEL) private roomModel: Model<Room>,
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
         private readonly eventEmitter: EventEmitter2,
     ) {
+        console.log('RoomService init ...')
         this.eventEmitter.on('newMessage', (message: Message) => this.onNewMessageInRoom(message));
         this.eventEmitter.on('removeMessage', (messageId: string) => this.onRemoveMessageInRoom(messageId));
     }
 
     getRooms(search?: string): Observable<{ rooms: Room[], lastRecord: string | null }> {
         const query = search ? { 'name': { $regex: search, $options: 'i' } } : {};
-    
+
         return from(
             this.roomModel.find(query)
-                .sort({ 'createdAt': -1})
+                .sort({ 'createdAt': -1 })
                 .populate({
                     path: 'participants',
                     select: '_id indexMessageRead -roomId',
@@ -49,7 +50,7 @@ export class RoomService {
                 })
         );
     }
-    
+
     /**
      * Find one
      * @param id 
@@ -68,6 +69,47 @@ export class RoomService {
                 })
                 .exec()
         )
+    }
+
+    /**
+     * Find one
+     * @param id 
+     * @returns 
+     */
+    getParticipantsByRoom(id: string): Observable<IRoom> {
+        return from(
+            this.roomModel.findById(id)
+                .populate({
+                    path: 'participants',
+                    select: '_id userId username'
+                })
+                .populate({
+                    path: 'owner',
+                    select: '_id email username avatar'
+                })
+                .exec()
+        ).pipe(
+            map((room: Room | null) => {
+                if (!room) {
+                    throw new Error('Room not found');
+                }
+                const resRoom: IRoom = {
+                    _id: room._id.toString(),
+                    isGroup: room.isGroup,
+                    name: room.name,
+                    owner: room.owner,
+                    participants: room.participants?.map((participant: any) => ({
+                        _id: participant.userId._id.toString(),
+                        username: participant.userId.username,
+                        avatar: participant.userId.avatar
+                    })) || [],
+                };
+                return resRoom;
+            }),
+            catchError(error => {
+                return throwError(() => new Error(error.message));
+            })
+        );
     }
 
     findById(id: string): Observable<{ room: ResRoomDto }> {
@@ -113,7 +155,6 @@ export class RoomService {
             })
         );
     }
-x    
 
     async getById(id: string): Promise<Room> {
         const room = await this.cacheManager.get<Room>(id);
@@ -147,9 +188,9 @@ x
         const isGroup = userIds.length > 2;
         const timeLastMessage = new Date();
         const newRoom = new this.roomModel({
-            ...data, 
-            isGroup, 
-            timeLastMessage, 
+            ...data,
+            isGroup,
+            timeLastMessage,
             owner: userId,
             avatarUrl: 'https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp'
         });
@@ -167,7 +208,7 @@ x
         return savedRoom;
     }
 
-    async inviteUserIntoRoom(id: string, data: InviteUserDto): Promise<{room: Room}> {
+    async inviteUserIntoRoom(id: string, data: InviteUserDto): Promise<{ room: Room }> {
         const room = await this.roomModel.findById(id)
             .populate({
                 path: 'participants',
@@ -199,7 +240,7 @@ x
 
         const roomDB = await this.roomModel.findById(id).exec();
         await this.cacheManager.set(roomDB._id.toString(), roomDB);
-        return { room: roomDB};
+        return { room: roomDB };
     }
 
     /**
@@ -208,7 +249,7 @@ x
      * @param data 
      * @returns 
      */
-    async updateNameOfRoom(id: string, data: ChangeRoomNameDto): Promise<{ room: Room}> {
+    async updateNameOfRoom(id: string, data: ChangeRoomNameDto): Promise<{ room: Room }> {
         const room = await this.roomModel.findById(id)
             .populate({
                 path: 'participants',
@@ -226,7 +267,7 @@ x
         const updatedRoom = await room.save();
         await this.cacheManager.set(updatedRoom._id.toString(), updatedRoom);
 
-        return {room: updatedRoom };
+        return { room: updatedRoom };
     }
 
     /**
@@ -249,7 +290,7 @@ x
         if (!room) {
             throw new NotFoundException(`Room with id ${id} not found`);
         }
-        
+
         room.avatarUrl = file.path;
         const savedRoom = await room.save();
         await this.cacheManager.set(savedRoom._id.toString(), savedRoom);
@@ -284,7 +325,7 @@ x
 
     onNewMessageInRoom(message: Message): void {
         // TODO
-        
+
     }
 
     onUserInRoom(message: Message): void {

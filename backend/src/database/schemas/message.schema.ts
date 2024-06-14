@@ -87,6 +87,9 @@ export class Message {
 export const MessageSchema = SchemaFactory.createForClass(Message);
 
 MessageSchema.pre(['find', 'findOne'], function (next) {
-    this.populate('userId').populate({ path: 'messageReply', options: { strictPopulate: false } });
+    this.populate({
+        path: 'userId',
+        select: '_id email username avatar',
+    }).populate({ path: 'messageReply', options: { strictPopulate: false } });
     next();
 });

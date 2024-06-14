@@ -2,59 +2,44 @@
 'use client'
 import { AvatarWrap, TooltipWrap } from '@/components/commons'
 import { IParticipant } from '@/interface/response'
-import { ESocketEvent, IMAGE_TYPE, MESSAGE_TYPE } from '@/utils/constants'
+import { IMAGE_TYPE, MESSAGE_TYPE } from '@/utils/constants'
 import { getImage } from '@/utils/helpers'
 import { Button, Dropdown, MenuProps } from 'antd'
 import clsx from 'clsx'
 import { useState } from 'react'
 import './style.scss'
 import { DeleteOutlined, EditOutlined, MoreOutlined } from '@ant-design/icons'
-import { IMessage } from '@/interface/common'
 import { Message } from './Message'
+import { IGetMessagesResponse } from '@/interface/response/message/index'
 
-interface IConversationItemProps {
-    data: any
+interface IMessageItemProps {
+    message: IGetMessagesResponse
     isShowName?: boolean
     isMe?: boolean
     isLastMsg?: boolean
     index: number
     participants: (IParticipant & { customIndexRead: number })[]
-    setReplyingTo: (value: IMessage | null) => void
 }
-export const ConversationItem: React.FC<IConversationItemProps> = ({
-    data,
+export const MessageItem: React.FC<IMessageItemProps> = ({
+    message,
     isShowName,
     isMe,
     isLastMsg,
-    index,
     participants,
-    setReplyingTo,
 }) => {
     const [isShowMore, setIsShowMore] = useState<boolean>(false)
 
     const handleRemoveMessage = (messageId: string) => {
-        sendMessage(
-            JSON.stringify({
-                event: ESocketEvent.REMOVE_MESSAGE,
-                payload: {
-                    message: {
-                        roomId: data?.roomId,
-                        _id: messageId,
-                    },
-                },
-            }),
-        )
         setIsShowMore(false)
     }
 
-    const handleReplyMessage = (message: IMessage) => {
-        setReplyingTo(message)
+    const handleReplyMessage = (message: IGetMessagesResponse) => {
     }
 
     const messsageActions: MenuProps['items'] = [
         {
             label: (
-                <div onClick={() => handleRemoveMessage(data?._id)}>
+                <div onClick={() => handleRemoveMessage(message?._id)}>
                     <p className='action_name'>
                         <DeleteOutlined /> Unsend
                     </p>
@@ -64,12 +49,12 @@ export const ConversationItem: React.FC<IConversationItemProps> = ({
         },
     ]
 
-    if (data?.type === MESSAGE_TYPE.NOTIFY) {
+    if (message?.type === MESSAGE_TYPE.NOTIFY) {
         return (
             <div className={clsx('conversation-item-notif')}>
                 <div>
                     <EditOutlined />
-                    <span>{data?.content}</span>
+                    <span>{message.content.toString()}</span>
                 </div>
             </div>
         )
@@ -81,21 +66,21 @@ export const ConversationItem: React.FC<IConversationItemProps> = ({
                 className={clsx('conversation-wrap', isMe && 'conversation-wrap__me')}
             >
                 {!isMe && (
-                    <TooltipWrap title={data?.user?.name} placement='left' arrow={false}>
+                    <TooltipWrap title={message.userId.username} placement='left' arrow={false}>
                         <div className='left'>
                             <AvatarWrap
                                 size={28}
-                                src={getImage(data?.user?.avatar!, IMAGE_TYPE.AVATAR)}
+                                src={getImage(message.userId.avatar!, IMAGE_TYPE.AVATAR)}
                             />
                         </div>
                     </TooltipWrap>
                 )}
                 <div className='right'>
                     {!isMe && isShowName && (
-                        <div className='name'>{data?.user?.name}</div>
+                        <div className='name'>{message.userId.username}</div>
                     )}
                     <>
-                        {!isShowMore && data?.deletedAt === 0 && (
+                        {!isShowMore && !message.deletedAt && (
                             <div className={clsx(['options', { 'options-right': !isMe, 'options-left': isMe }])}>
                                 {isMe && <Dropdown
                                     menu={{ items: messsageActions }}
@@ -105,7 +90,7 @@ export const ConversationItem: React.FC<IConversationItemProps> = ({
                                 >
                                     <MoreOutlined />
                                 </Dropdown>}
-                                <Button className='reply-button' onClick={() => handleReplyMessage(data)}>
+                                <Button className='reply-button' onClick={() => handleReplyMessage(message)}>
                                     <div className='reply-button-icon'>
                                         <img src='/icons/reply.svg' alt='' />
                                     </div>
@@ -113,14 +98,14 @@ export const ConversationItem: React.FC<IConversationItemProps> = ({
                             </div>
                         )}
                     </>
-                    {data?.deletedAt !== 0 ? (
+                    {!!(message.deletedAt) ? (
                         <div className='message_removed'>
                             <p>You unsent a message</p>
                         </div>
                     ) : (
                         <div>
                             {/* {renderContent(data?.type)} */}
-                            <Message data={data} isLastMsg={isLastMsg!} isMe={isMe!} />
+                            <Message message={message} isLastMsg={isLastMsg!} isMe={isMe!} />
                         </div>
                     )}
                 </div>

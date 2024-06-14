@@ -14,19 +14,20 @@ import { RoomService } from '@/services/room/index'
 import { MessageService } from '@/services/message/index'
 import { IGetMessagesResponse } from '@/interface/response/message/index'
 import { getImage, getUserById, trunMessage } from '@/utils/helpers/index'
-import { ESocketEvent, IMAGE_TYPE, TIMEOUT_CALL } from '@/utils/constants/index'
-import { ConversationItem } from '../RoomItem/index'
+import { IMAGE_TYPE, TIMEOUT_CALL } from '@/utils/constants/index'
+import { MessageItem } from '../MessageItem/index'
 import WaitingCall from '@/components/callings/waitingCall/index'
 import JitsiMeetingCall from '@/components/callings/jitsiMeetingCall/index'
 import { AvatarGroupWrap } from '@/components/commons/AvatarGroupWrap/index'
 import { AvatarWrap } from '@/components/commons/AvatarWrap/index'
 import { DetailIcon } from '@/components/icons/DetailIcon/index'
-import { TypingItem } from '../TypingItem/index'
-import { AreaChat } from '../AreaChat/index'
+import { TypingMessage } from '../TypingMessage/index'
+import { ChatRoom } from '../ChatRoom/index'
 import SidebarMenu from '@/modules/SidebarMenu/index'
 import { ChatIcon } from '@/components/icons/ChatIcon/index'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import moment from 'moment'
+import useChat from '@/services/socket/useChat'
 interface IProps {
   roomId: string
 }
@@ -34,13 +35,17 @@ interface IProps {
 export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     const { currentUser } = useAuth()
     const messagesEndRef = useRef<any>(null)
-    const [isTyping, setIsTyping] = useState<boolean>(false)
-    const [typingUsers, setTypingUsers] = useState<ITypingUser[]>([])
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const [replyingTo, setReplyingTo] = useState<IMessage | null>(null)
     const [officialMessages, setOfficialMessages] = useState<IMessage[]>([])
     const [isStartCall, setIsStartCall] = useState<boolean>(false)
     const [isOpenMeeting, setIsOpenMeeting] = useState<boolean>(false)
+    const {
+        lastMessage,
+        setLastMessage,
+        typingUsers
+    } = useChat(roomId as string);
+
     // current room selected
     const [roomCurrentSelected, setRoomCurrentSelected] = useState<IGetRoomResponse>()
     // data of room in talk
@@ -53,37 +58,33 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
         lastRecord: '',
         isJumpToMessages: false,
     })
-    
+
+    /**
+     * Get room detail
+     */
     const { refetch: fetchRoomDetail } = useQuery(
         [ENDPOINT.ROOM.GET_ROOM_DETAIL],
         () => RoomService.getRoomDetail(roomId),
         {
         enabled: !!roomId,
             onSuccess: (response: any) => {
-                const typingUserList = (response?.room?.participants ?? [])
-                .map((user: any) => ({
-                    ...user,
-                    isTyping: false,
-                }))
-                .filter((other: any) => other._id !== currentUser?._id)
                 setRoomCurrentSelected(response?.room)
-                setTypingUsers(typingUserList)
                 !isOpen && refetchRawMessages()
             },
         },
     )
-
+    /**
+     * Get all message
+     */
     const { data: rawMessages, refetch: refetchRawMessages } = useQuery(
         [ENDPOINT.MESSAGE.GET_MESSAGES, roomId, params.lastRecord],
         () => MessageService.getMessages({ id: roomId, params }),
         {
             enabled: !!params && !!roomId && params.lastRecord !== null,
             onSuccess: (data: any) => {
-                const dataApi =
-                data &&
-                data.data.map((message: IGetMessagesResponse) => {
+                const dataApi = data && data.data.map((message: IGetMessagesResponse) => {
                     const user = getUserById(
-                        message.userId,
+                        message._id,
                         roomCurrentSelected?.participants || [],
                     )
                     return {
@@ -92,30 +93,28 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
                     }
                 })
                 if (dataApi) {
-                const resultData = params.isJumpToMessages
-                    ? dataApi
-                    : uniqBy([...officialMessages, ...dataApi], '_id')
-                setOfficialMessages(resultData)
-                setTimeout(() => {
-                    const element = document.getElementById(
-                    searchMsgId || dataApi[0]?._id,
-                    )
-                    if (element) {
-                    element.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'nearest',
-                        inline: 'nearest',
-                    })
-                    }
-                    if (searchMsgId) {
-                    setSearchMsgId(null)
-                    setParams({
-                        ...params,
-                        isJumpToMessages: false,
-                    })
-                    }
-                }, 300)
-                return
+                    const resultData = params.isJumpToMessages
+                        ? dataApi
+                        : uniqBy([...officialMessages, ...dataApi], '_id')
+                    setOfficialMessages(resultData)
+                    setTimeout(() => {
+                        const element = document.getElementById(searchMsgId || dataApi[0]?._id)
+                        if (element) {
+                            element.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'nearest',
+                                inline: 'nearest',
+                            })
+                        }
+                        if (searchMsgId) {
+                            setSearchMsgId(null)
+                            setParams({
+                                ...params,
+                                isJumpToMessages: false,
+                            })
+                        }
+                    }, 300)
+                    return
                 }
 
                 setParams({
@@ -146,6 +145,20 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
             isJumpToMessages: true,
         })
     }
+
+    /**
+     * monitoring last message
+     */
+    useEffect(() => {
+        console.log('monitoring last message', lastMessage, typingUsers);
+        if (lastMessage) {
+          setOfficialMessages((prevMessages: any) => uniqBy([lastMessage, ...prevMessages], '_id'));
+          setLastMessage(undefined);
+        }
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+        }
+    }, [lastMessage, typingUsers, officialMessages]);
 
     /**
      * start call
@@ -200,94 +213,72 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     }
 
     const currentFriend = roomCurrentSelected?.participants?.find((person: IParticipant) => person?.userId !== currentUser?._id)
+    
     const onGetMoreMsg = () => {
+        const lastRecord = JSON.stringify(
+            officialMessages.length > 1 
+            ? officialMessages[officialMessages.length - 2]._id 
+            : officialMessages[officialMessages.length - 1]._id
+        );
+    
         setParams({
             ...params,
-            lastRecord: JSON.stringify(
-                officialMessages.length === 1
-                ? officialMessages[officialMessages?.length - 1]._id
-                : officialMessages[officialMessages?.length - 2]._id,
-            ),
-        })
-    }
+            lastRecord
+        });
+    };
+    
     const renderMessages = () => {
-        let firstIndexToday = -1
-        for (var i = officialMessages.length - 1; i >= 0; i--) {
-            const message = officialMessages[i]
-            if (
-                new Date(message.createdAt).toDateString() === new Date().toDateString()
-            ) {
-                firstIndexToday = i
-                break
+        const today = new Date().toDateString();
+    
+        // Ensure `officialMessages` is an array of IMessage
+        const groupDateObject = officialMessages.reduce<Record<string, { date: string; messages: IMessage[] }>>((acc, message) => {
+            const messageDate = new Date(message.createdAt).toDateString();
+            if (!acc[messageDate]) {
+                acc[messageDate] = { date: messageDate, messages: [] };
             }
-        }
-        const groupDateObject = officialMessages.reduce(
-            (
-                target: Record<
-                string,
-                { date: string; messages: IGetMessagesResponse[] }
-                >,
-                message: IGetMessagesResponse,
-            ) => {
-                var messageDate = new Date(message.createdAt).toDateString()
-                if (!target[messageDate]) {
-                target[messageDate] = {
-                    date: messageDate,
-                    messages: [],
-                }
-                }
-                target[messageDate].messages.push(message)
-                return target
-            }, {},
-        )
-        const result: { date: string; messages: IGetMessagesResponse[] }[] =
-        Object.values(groupDateObject)
+            acc[messageDate].messages.push(message);
+            return acc;
+        }, {});
+    
+        const result = Object.values(groupDateObject);
+    
+        // Ensure `roomCurrentSelected` is properly typed and defined
         const participants = roomCurrentSelected?.participants
-            ?.filter((other: any) => other._id !== currentUser?._id)
-            .map((e: any) => ({
+            ?.filter((other: IParticipant) => other._id !== currentUser?._id)
+            .map((e: IParticipant) => ({
                 ...e,
                 customIndexRead: roomCurrentSelected.totalMessage - e.indexMessageRead,
-            })
-        ) || []
-        let indexMessage = -1
-        return result.map((messageGroup, indexGroup) => {
-            return (
-                <div key={indexGroup}>
-                    <div className='time-group'>
-                        <Divider>
-                        {new Date().toDateString() == messageGroup.date
-                            ? 'Today'
-                            : moment(messageGroup.date).format('YYYY-MM-DD')}
-                        </Divider>
-                    </div>
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column-reverse',
-                            gap: '25px',
-                        }}
-                    >
-                        {messageGroup.messages.map((message, index) => {
-                        indexMessage++
-                            return (
-                                <div key={message._id} id={message._id}>
-                                    <ConversationItem
-                                        index={indexMessage}
-                                        data={message}
-                                        isMe={currentUser?._id === message?.userId}
-                                        isLastMsg={indexMessage === 0}
-                                        participants={participants}
-                                        isShowName={roomCurrentSelected?.isGroup}
-                                        setReplyingTo={setReplyingTo}
-                                    />
-                                </div>
-                            )
-                        })}
-                    </div>
+            })) || [];
+    
+        let indexMessage = -1;
+    
+        return result.map((messageGroup, indexGroup) => (
+            <div key={indexGroup}>
+                <div className='time-group'>
+                    <Divider>
+                        {today === messageGroup.date ? 'Today' : moment(messageGroup.date).format('YYYY-MM-DD')}
+                    </Divider>
                 </div>
-            )
-        })
-    }
+                <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '25px' }}>
+                    {messageGroup.messages.map((message: any, index) => {
+                        indexMessage++;
+                        return (
+                            <div key={message._id} id={message._id}>
+                                <MessageItem
+                                    index={indexMessage}
+                                    message={message}
+                                    isMe={currentUser?._id === message?.userId}
+                                    isLastMsg={indexMessage === 0}
+                                    participants={participants}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        ));
+    };
+    
 
     const renderContent = () => {
         if (roomId) {
@@ -374,37 +365,40 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
                     }}
                 >
                     <InfiniteScroll
-                    dataLength={Number(officialMessages?.length) || 0}
-                    next={onGetMoreMsg}
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column-reverse',
-                        gap: '12px',
-                        padding: '0 10px',
-                        overflowX: 'hidden',
-                        marginTop: '10px',
-                    }}
-                    inverse={true}
-                    hasMore={rawMessages?.data?.nextCursor !== null}
-                    loader={<h4>Loading...</h4>}
-                    scrollableTarget='scrollableDiv'
-                    ref={messagesEndRef}
+                        dataLength={Number(officialMessages?.length) || 0}
+                        next={onGetMoreMsg}
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column-reverse',
+                            gap: '12px',
+                            padding: '0 10px',
+                            overflowX: 'hidden',
+                            marginTop: '10px',
+                        }}
+                        inverse={true}
+                        hasMore={rawMessages?.data?.nextCursor !== null}
+                        loader={<h4>Loading...</h4>}
+                        scrollableTarget='scrollableDiv'
+                        ref={messagesEndRef}
                     >
                     <>
-                        {typingUsers?.map(
-                        (other, index) =>
-                            other?.isTyping && <TypingItem key={index} data={other!} />,
-                        )}
-                        {renderMessages()}
+                    {
+                        typingUsers.map((user, i) => (
+                            <li key={user.userId}>
+                                <TypingMessage user={user}></TypingMessage>
+                            </li>
+                        ))
+                    }
+                    {
+                        renderMessages()
+                    }
                     </>
                     </InfiniteScroll>
+                    <div ref={messagesEndRef} />
                 </div>
-                <AreaChat
-                    isTyping={isTyping}
-                    setIsTyping={setIsTyping}
+                <ChatRoom
                     roomId={roomId}
-                    replyingTo={replyingTo}
-                    setReplyingTo={setReplyingTo}
+                    messageTo={replyingTo}
                 />
                 {isOpen && (
                     <SidebarMenu

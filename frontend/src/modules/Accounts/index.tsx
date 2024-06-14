@@ -1,13 +1,13 @@
 import { AvatarWrap, AvatarGroupWrap, SpinWrap, TooltipWrap, UploadWrap } from '@/components/commons';
 
-import { useAuth } from '@/providers/Auth'
+import { useAuth } from '@/providers/auth'
 import { APP_ROUTER } from '@/utils/constants/router'
 import { deleteCookie } from '@/utils/helpers/storage'
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
 import { Button, Dropdown, MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { AuthService } from '@/services'
-import { useFcmToken } from '@/providers/FcmToken'
+import { useFcmToken } from '@/providers/fcm-token'
 import './style.scss'
 
 const AccountDropdown = () => {

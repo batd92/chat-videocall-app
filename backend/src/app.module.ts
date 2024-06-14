@@ -13,6 +13,7 @@ import { RoomModule } from './modules/room/room.module';
 import { ChatModule } from './gateway/chat/chat.module';
 import { VideoCallModule } from './gateway/video-call/video-call.module';
 import { JitsiorgModule } from './gateway/jitsi.org/jitsi.org.module';
+import { JoinRoomModule } from './gateway/join-room/join-room.module';
 
 @Module({
     imports: [
@@ -20,8 +21,6 @@ import { JitsiorgModule } from './gateway/jitsi.org/jitsi.org.module';
         EventEmitterModule.forRoot(),
         DatabaseModule,
         CoreModule, 
-        ChatModule,
-        VideoCallModule,
         JitsiorgModule,
         UserModule,
         AuthModule,
@@ -29,7 +28,9 @@ import { JitsiorgModule } from './gateway/jitsi.org/jitsi.org.module';
         MessageModule,
         ParticipantModule,
         WSJwtAuthSocketModule,
-   
+        JoinRoomModule,
+        ChatModule,
+        VideoCallModule,
         LoggerModule.forRoot(),
     ],
     providers: [

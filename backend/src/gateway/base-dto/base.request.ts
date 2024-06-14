@@ -25,6 +25,10 @@ export class BaseRequest {
     @IsNotEmpty()
     readonly roomId: string;
 
+    @IsNotEmpty()
+    readonly senderId: string
+}
+export class BaseCommon {
     @IsOptional()
     readonly replyFromId: string;
 

@@ -1,80 +1,75 @@
-'use client'
-
-import { IGetRoomResponse } from '@/interface/response/room'
-import { Avatar, Image, Modal, Row } from 'antd'
-import React from 'react'
-import './style.scss'
+import { IGetRoomResponse } from '@/interface/response/room';
+import { Avatar, Image, Modal, Row } from 'antd';
+import React from 'react';
+import './style.scss';
 
 interface IModalWrap {
-    room: IGetRoomResponse
-    isOpen: boolean
-    onCancel: () => void
+    room: IGetRoomResponse;
+    isOpen: boolean;
+    onCancel: () => void;
 }
-const WaitingCall: React.FC<IModalWrap> = ({
-    room,
-    isOpen = false,
-    onCancel,
-}) => {
-    const userId = 1
 
-    const participantFirst = room?.participants?.filter(
-        (e) => e._id !== String(userId),
-    )[0]
-    const renderFooter = () => {
-        return (
-            <div className='waiting-call-card-footer'>
-                <Image
-                    onClick={onCancel}
-                    style={{ cursor: 'pointer', display: 'inline-block' }}
-                    src='/images/phone-call-close-icon.png'
-                    height={'50px'}
-                    preview={false}
-                    alt='description of image'
-                />
-            </div>
-        )
-    }
+const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
+    const userId = 1;
+
+    const participantFirst = room?.participants?.find((e) => e._id !== String(userId));
+
+    const renderFooter = () => (
+        <div className='waiting-call-card-footer'>
+            <Image
+                onClick={onCancel}
+                style={{ cursor: 'pointer', display: 'inline-block' }}
+                src='/images/phone-call-close-icon.png'
+                height={50}
+                preview={false}
+                alt='Close call'
+            />
+        </div>
+    );
+
     return (
-        <>
-            <Modal
-                open={isOpen}
-                closeIcon={<></>}
-                footer={renderFooter()}
-                className='waiting-call-modal'
-            >
-                <Row className='waiting-call-card' justify='center'>
-                    <div>
-                        {room?.isGroup ? (
-                            <div className='group'>
-                                <h1 className='name'>
-                                    <strong>{room.name}</strong>
-                                </h1>
-                                {room.participants.map((participant : any) => (
-                                    <Avatar
-                                        className='avatar'
-                                        key={participant._id}
-                                        src={participant.avatarUrl}
-                                        alt='description of image'
-                                    />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className='not-group'>
-                                <h1 className='name'>
-                                    <strong>User</strong>
-                                </h1>
+        <Modal
+            visible={isOpen}
+            closeIcon={null}
+            footer={renderFooter()}
+            className='waiting-call-modal'
+            onCancel={onCancel}
+        >
+            <Row className='waiting-call-card' justify='center'>
+                <div>
+                    {room?.isGroup ? (
+                        <div className='group'>
+                            <h1 className='name'>
+                                <strong>{room.name}</strong>
+                            </h1>
+                            {room.participants.map((participant: any, index: number) => (
                                 <Avatar
+                                    key={participant._id + index} // <-- Add key prop here
                                     className='avatar'
-                                    src={participantFirst?.avatarUrl}
-                                    alt='description of image'
+                                    src={participant.avatarUrl}
+                                    alt='Participant avatar'
                                 />
-                            </div>
-                        )}
-                    </div>
-                </Row>
-            </Modal>
-        </>
-    )
-}
+                            ))}
+                        </div>
+                    ) : (
+                        <div className='not-group'>
+                            <h1 className='name'>
+                                <strong>User</strong>
+                            </h1>
+                            {participantFirst && (
+                                <Avatar
+                                    key={participantFirst._id} // <-- Add key prop here
+                                    className='avatar'
+                                    src={participantFirst.avatarUrl}
+                                    alt='Participant avatar'
+                                />
+                            )}
+                        </div>
+                    )}
+                </div>
+            </Row>
+        </Modal>
+    );
+};
 
-export default WaitingCall
+export default WaitingCall;
