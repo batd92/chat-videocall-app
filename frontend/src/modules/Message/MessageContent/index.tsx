@@ -152,12 +152,20 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     useEffect(() => {
         console.log('monitoring last message', lastMessage, typingUsers);
         if (lastMessage) {
-          setOfficialMessages((prevMessages: any) => uniqBy([lastMessage, ...prevMessages], '_id'));
-          setLastMessage(undefined);
+            setOfficialMessages((prevMessages: any) => uniqBy([lastMessage, ...prevMessages], '_id'));
+            setLastMessage(undefined);
+            setTimeout(() => {
+                const element = document.getElementById(lastMessage._id)
+                if (element) {
+                    element.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'nearest',
+                    })
+                }
+            }, 100)
         }
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-        }
+
     }, [lastMessage, typingUsers, officialMessages]);
 
     /**
@@ -376,10 +384,9 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
                             marginTop: '10px',
                         }}
                         inverse={true}
-                        hasMore={rawMessages?.data?.nextCursor !== null}
+                        hasMore={rawMessages?.data?.lastRecord !== null}
                         loader={<h4>Loading...</h4>}
                         scrollableTarget='scrollableDiv'
-                        ref={messagesEndRef}
                     >
                     <>
                     {

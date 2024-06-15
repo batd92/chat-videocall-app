@@ -6,7 +6,7 @@ let socket: Socket | null = null;
 export const getSocket = () => {
     if (!socket) {
         const token = getCookie('access_token') || '';
-        socket = io('http://localhost:3000', {
+        socket = io(process.env.NEXT_PUBLIC_URL_SOCKET || 'http://localhost:3000', {
             query: {
                 token
             }
