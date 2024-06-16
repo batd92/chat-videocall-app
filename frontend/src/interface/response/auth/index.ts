@@ -6,6 +6,8 @@ export interface ILoginResponse {
 export interface IGetMeResponse {
     _id: string
     email: string
-    name: string
-    avatarUrl: string
+    avatar: string
+    username: string
+    lastName: string
+    firstName: string
 }

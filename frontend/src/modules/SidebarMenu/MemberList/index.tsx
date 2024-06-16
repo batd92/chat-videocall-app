@@ -11,8 +11,8 @@ interface MemberListProps {
 const MemberList: React.FC<MemberListProps> = ({ participants, onAddMemberClick }) => {
     return (
         <div className='list-button'>
-            {participants.map((participant: any) => (
-                <div className='list-member' key={participant._id}>
+            {participants.map((participant: any, index: number) => (
+                <div className='list-member' key={participant._id + '_' + index}>
                     <AvatarWrap size={42} src={participant.avatarUrl} isOnline={participant.isOnline} />
                     {participant.name}
                 </div>

@@ -87,7 +87,7 @@ const CreateNewRoom: React.FC<IProps> = ({
         <>
         <Modal
             title={isUpdate ? 'Create New Room' : 'Update Name Room'}
-            visible={open}
+            open={open}
             onCancel={onCancel}
             onOk={() => mutateCreateRoom()}
         >

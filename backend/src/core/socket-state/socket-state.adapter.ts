@@ -32,6 +32,8 @@ export class SocketStateAdapter extends IoAdapter implements WebSocketAdapter {
         server.use(async (socket: AuthenticatedSocket, next) => {
             try {
                 console.log('Authenticated socket...');
+                console.log('Handshake:', socket.handshake);
+
                 const authToken = socket.handshake.query.token || socket.handshake.headers?.authorization?.split(' ')[1];
                 console.log('Token:', authToken);
                 if (!authToken) {

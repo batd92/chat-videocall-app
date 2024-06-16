@@ -13,7 +13,7 @@ import { IGetMessagesRequest } from '@/interface/request/message/index'
 import { RoomService } from '@/services/room/index'
 import { MessageService } from '@/services/message/index'
 import { IGetMessagesResponse } from '@/interface/response/message/index'
-import { getImage, getUserById, trunMessage } from '@/utils/helpers/index'
+import { formatDateTime, getImage, getUserById, trunMessage } from '@/utils/helpers/index'
 import { IMAGE_TYPE, TIMEOUT_CALL } from '@/utils/constants/index'
 import { MessageItem } from '../MessageItem/index'
 import WaitingCall from '@/components/callings/waitingCall/index'
@@ -26,7 +26,6 @@ import { ChatRoom } from '../ChatRoom/index'
 import SidebarMenu from '@/modules/SidebarMenu/index'
 import { ChatIcon } from '@/components/icons/ChatIcon/index'
 import InfiniteScroll from 'react-infinite-scroll-component'
-import moment from 'moment'
 import useChat from '@/services/socket/useChat'
 interface IProps {
   roomId: string
@@ -42,9 +41,8 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     const [isOpenMeeting, setIsOpenMeeting] = useState<boolean>(false)
     const {
         lastMessage,
-        setLastMessage,
         typingUsers
-    } = useChat(roomId as string);
+    } = useChat();
 
     // current room selected
     const [roomCurrentSelected, setRoomCurrentSelected] = useState<IGetRoomResponse>()
@@ -153,20 +151,19 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
         console.log('monitoring last message', lastMessage, typingUsers);
         if (lastMessage) {
             setOfficialMessages((prevMessages: any) => uniqBy([lastMessage, ...prevMessages], '_id'));
-            setLastMessage(undefined);
             setTimeout(() => {
-                const element = document.getElementById(lastMessage._id)
+                const element = document.getElementById(lastMessage._id);
                 if (element) {
                     element.scrollIntoView({
                         behavior: 'smooth',
                         block: 'nearest',
                         inline: 'nearest',
-                    })
+                    });
                 }
-            }, 100)
+            }, 100);
         }
-
-    }, [lastMessage, typingUsers, officialMessages]);
+    }, [lastMessage]);
+    
 
     /**
      * start call
@@ -264,7 +261,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
             <div key={indexGroup}>
                 <div className='time-group'>
                     <Divider>
-                        {today === messageGroup.date ? 'Today' : moment(messageGroup.date).format('YYYY-MM-DD')}
+                        {today === messageGroup.date ? 'Today' : formatDateTime(messageGroup.date)}
                     </Divider>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '25px' }}>

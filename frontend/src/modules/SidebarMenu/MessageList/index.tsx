@@ -2,7 +2,7 @@ import React from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import { IMessage } from '@/interface/common/index'
 import { AvatarWrap } from '@/components/commons/AvatarWrap'
-import moment from 'moment'
+import { formatDateTime } from '@/utils/helpers'
 
 interface MessageListProps {
     messages: IMessage[]
@@ -43,7 +43,7 @@ const MessageList: React.FC<MessageListProps> = ({
                                         <div style={{ width: '100%' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <div>{participant.name}</div>
-                                                <div>{moment(messageGroup.createdAt).format('lll')}</div>
+                                                <div>{formatDateTime(messageGroup.createdAt)}</div>
                                             </div>
                                             <div>{messageGroup.content}</div>
                                         </div>

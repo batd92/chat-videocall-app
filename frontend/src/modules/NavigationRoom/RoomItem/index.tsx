@@ -1,13 +1,10 @@
-/* eslint-disable @next/next/no-img-element */
+import { useEffect } from 'react';
+import useChat  from '@/services/socket/useChat';
 import { AvatarGroupWrap, AvatarWrap } from '@/components/commons';
 import { SeenIcon, SentIcon } from '@/components/icons';
 import { useAuth } from '@/providers/auth';
 import { IMAGE_TYPE } from '@/utils/constants';
-import {
-  getImage,
-  getUserById,
-  trunMessage,
-} from '@/utils/helpers';
+import { getImage, getUserById, trunMessage } from '@/utils/helpers';
 import { EllipsisOutlined } from '@ant-design/icons';
 import { Badge } from 'antd';
 import clsx from 'clsx';
@@ -16,11 +13,10 @@ import './style.scss';
 import { IRoomDetail } from '@/interface/common/index';
 import { formatDateTime } from '@/utils/helpers/index';
 import { APP_ROUTER } from '@/utils/constants/router';
-import { useRouter } from 'next/navigation'
-import useChat from '@/services/socket/useChat';
+import { useRouter } from 'next/navigation';
 
 interface IProps {
-    room: IRoomDetail
+    room: IRoomDetail;
 }
 
 export const RoomItem: React.FC<IProps> = ({ room }) => {
@@ -37,48 +33,56 @@ export const RoomItem: React.FC<IProps> = ({ room }) => {
     } = room;
 
     const { currentUser } = useAuth();
-    const {
-        joinRoom
-    } = useChat(room.id as string);
+    const { joinRoom, changeRoom } = useChat();
 
-    const router = useRouter()
-    const me = useMemo(() => participants?.find((user: any) => user._id === currentUser?._id), [participants, currentUser?._id]);
-    const countUnreadMessage= useMemo(
-        () => totalMessage - Number(me?.indexMessageRead || 0),
-        [totalMessage, me?.indexMessageRead]
-    );
-    
-    const friends = useMemo(
-        () => participants?.filter((person: any) => person._id !== currentUser?._id),
-        [participants, currentUser?._id]
-    );
+    const router = useRouter();
+    const me = useMemo(() => participants?.find((user: any) => user._id === currentUser?._id), [
+        participants,
+        currentUser?._id,
+    ]);
+    const countUnreadMessage = useMemo(() => totalMessage - Number(me?.indexMessageRead || 0), [
+        totalMessage,
+        me?.indexMessageRead,
+    ]);
+
+    const friends = useMemo(() => participants?.filter((person: any) => person._id !== currentUser?._id), [
+        participants,
+        currentUser?._id,
+    ]);
 
     /**
      * Read message unread
      */
     const readMessageUnread = () => {
-        alert('move chat detail')
-        if (countUnreadMessage > 0) {
-            
+        alert('move chat detail');
+        if (room.id) {
+            try {
+                changeRoom(room.id as string);
+                joinRoom(room.id as string);   
+            } catch (error) {
+                console.log(error)
+            }
         }
-        joinRoom();
-        // move chat detail
-        router.push(APP_ROUTER.MESSAGE.CHAT_DETAIL.replace(':id', room?.id))
-      }
-      
+        if (countUnreadMessage > 0) {
+            // Xử lý khi có tin nhắn chưa đọc
+        }
+        // Chuyển đến trang chat detail
+        router.push(APP_ROUTER.MESSAGE.CHAT_DETAIL.replace(':id', room?.id));
+    };
+
     const renderMsgStatus = useCallback(() => {
         if (lastMsg?.userId !== currentUser?._id) {
             return countUnreadMessage > 0 ? (
                 <Badge
-                count={countUnreadMessage}
-                style={{
-                    backgroundColor: 'var(--color-green-1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: 18,
-                    minWidth: 18,
-                }}
+                    count={countUnreadMessage}
+                    style={{
+                        backgroundColor: 'var(--color-green-1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: 18,
+                        minWidth: 18,
+                    }}
                 />
             ) : (
                 <SeenIcon />
@@ -92,7 +96,9 @@ export const RoomItem: React.FC<IProps> = ({ room }) => {
         const lastUser = getUserById(userId, participants);
 
         if (deletedAt !== 0) {
-            return lastUser?._id === me?._id ? 'You unsent a message' : `${lastUser?.name} unsent a message`;
+            return lastUser?._id === me?._id
+                ? 'You unsent a message'
+                : `${lastUser?.name} unsent a message`;
         }
 
         switch (type) {
@@ -100,20 +106,26 @@ export const RoomItem: React.FC<IProps> = ({ room }) => {
                 return `Sent ${content?.length} file`;
             case 'Call':
                 return content?.status === 'Running'
-                ? isGroup ? 'Initiating a call' : 'Calling you'
-                : isGroup ? '1 call ended' : 'Called you';
+                    ? isGroup
+                        ? 'Initiating a call'
+                        : 'Calling you'
+                    : isGroup
+                    ? '1 call ended'
+                    : 'Called you';
             case 'Text':
                 return content;
             default:
                 return '';
-            }
+        }
     }, [lastMsg, participants, me?._id, isGroup]);
 
     const renderMsg = useMemo(() => {
         if (lastMsg) {
             if (isGroup) {
                 const lastUser = getUserById(lastMsg?.userId, participants);
-                const finalMsg = `${lastUser?._id === currentUser?._id && lastMsg?.deletedAt !== 0 ? 'You' : lastUser?.name}: ${getMessages()}`;
+                const finalMsg = `${
+                    lastUser?._id === currentUser?._id && lastMsg?.deletedAt !== 0 ? 'You' : lastUser?.name
+                }: ${getMessages()}`;
                 return trunMessage(finalMsg, 30);
             }
             return trunMessage(getMessages(), 30);
@@ -124,11 +136,9 @@ export const RoomItem: React.FC<IProps> = ({ room }) => {
     return (
         <div className="c-message-item" onClick={readMessageUnread}>
             <div className="avatar">
-                {isGroup && !avatarUrl ? 
-                (
+                {isGroup && !avatarUrl ? (
                     <AvatarGroupWrap users={participants} isOnline={hasOnline} />
-                ) : 
-                (
+                ) : (
                     <AvatarWrap
                         size={48}
                         src={avatarUrl || getImage(friends?.[0]?.avatarUrl, IMAGE_TYPE.AVATAR)}
@@ -138,29 +148,21 @@ export const RoomItem: React.FC<IProps> = ({ room }) => {
             </div>
             <div className="right">
                 <div className="top">
-                <div className="contact-name">
-                    {isGroup
-                    ? trunMessage(name, 26)
-                    : friends && friends.length > 0
-                    ? trunMessage(friends[0]?.username, 26)
-                    : ''}
-                </div>
-                <div className="time">
-                    {formatDateTime(lastMsg?.createdAt || createdAt)}
-                </div>
+                    <div className="contact-name">
+                        {isGroup ? trunMessage(name, 26) : friends && friends.length > 0 ? trunMessage(friends[0]?.username, 26) : ''}
+                    </div>
+                    <div className="time">{formatDateTime(lastMsg?.createdAt || createdAt)}</div>
                 </div>
                 <div className="bottom">
-                <div className={clsx('summary', countUnreadMessage > 0 && 'summary__unread')}>
-                    {renderMsg}
-                </div>
-                <div className="message-status">
-                    {lastMsg && renderMsgStatus()}
-                </div>
+                    <div className={clsx('summary', countUnreadMessage > 0 && 'summary__unread')}>
+                        {renderMsg}
+                    </div>
+                    <div className="message-status">{lastMsg && renderMsgStatus()}</div>
                 </div>
             </div>
             <div className="tools">
                 <div className="more-action">
-                <EllipsisOutlined />
+                    <EllipsisOutlined />
                 </div>
             </div>
         </div>

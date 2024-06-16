@@ -81,7 +81,7 @@ const CreateRoom: React.FC<IProps> = ({
         <>
         <Modal
             title='Create New Room'
-            visible={open}
+            open={open}
             onCancel={onCancel}
             onOk={() => mutateCreateRoom()}
             confirmLoading={isLoadingCreateRoom}

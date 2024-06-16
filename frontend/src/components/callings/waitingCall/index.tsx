@@ -29,7 +29,7 @@ const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
 
     return (
         <Modal
-            visible={isOpen}
+            open={isOpen}
             closeIcon={null}
             footer={renderFooter()}
             className='waiting-call-modal'

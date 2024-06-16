@@ -1,6 +1,5 @@
 import { Modal, notification } from 'antd';
 import { IMAGE_TYPE, UPLOAD_FILE_STATUS } from '../constants';
-import moment from 'moment';
 import { TypeFileStorage } from '@/interface/response';
 
 interface INotificationModal {
@@ -122,9 +121,29 @@ export const getImage = (image: string | null, type: IMAGE_TYPE) => {
 /**
  * Display formatted message time.
  */
-export const formatDateTime = (inputTime: string | number) => {
+export const formatDateTime = (inputTime: string | number): string => {
     if (!inputTime) return '';
-    return moment(inputTime).format('DD/MM/YYYY HH:mm:ss')
+
+    let date: Date;
+    
+    if (typeof inputTime === 'string' || typeof inputTime === 'number') {
+        date = new Date(inputTime);
+    } else {
+        return '';
+    }
+
+    if (isNaN(date.getTime())) {
+        return '';
+    }
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
 };
 
 /**

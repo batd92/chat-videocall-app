@@ -45,7 +45,8 @@ const LoginPage = () => {
 
     const getProfileUserSuccess = (response: any) => {
         try {
-            setCurrentUser(pickData(response.data, ['_id', 'avatarUrl', 'email', 'name']))
+            console.log('response.data .....', response.data)
+            setCurrentUser(pickData(response.data, ['_id', 'avatar', 'email', 'username', 'firstName', 'lastName']))
             router.push(APP_ROUTER.MESSAGE.CHAT_EMPTY)   
         } catch (error) {
             console.log(error)

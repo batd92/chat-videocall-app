@@ -1,36 +1,62 @@
 import { getCookie } from "@/utils/helpers/storage";
 import { io, Socket } from "socket.io-client";
 
-let socket: Socket | null = null;
+class SocketService {
+    private static instance: SocketService | null = null;
+    private socket: Socket | null = null;
 
-export const getSocket = () => {
-    if (!socket) {
+    private constructor() {
+        // Prevent external instantiation
+    }
+
+    public static getInstance(): SocketService {
+        if (!SocketService.instance) {
+            SocketService.instance = new SocketService();
+            SocketService.instance.initSocket();
+        }
+        return SocketService.instance;
+    }
+
+    private initSocket() {
         const token = getCookie('access_token') || '';
-        socket = io(process.env.NEXT_PUBLIC_URL_SOCKET || 'http://localhost:3000', {
+        
+        if (!token) {
+            console.error('Không tìm thấy access token, không thể thiết lập kết nối socket.');
+            return;
+        }
+
+        const socketUrl = process.env.NEXT_PUBLIC_URL_SOCKET || 'http://localhost:3000';
+
+        this.socket = io(socketUrl, {
+            reconnectionDelayMax: 10000,
             query: {
                 token
             }
         });
 
-        socket.on("connect", () => {
-            console.log('Connected with socket id:', socket!.id);
+        this.socket.on("connect", () => {
+            console.log('Đã kết nối với socket id:', this.socket!.id);
         });
 
-        socket.on("connect_error", (error: any) => {
-            console.error('Connection error:', error);
+        this.socket.on("connect_error", (error: any) => {
+            console.error('Lỗi kết nối:', error);
         });
 
-        socket.on("disconnect", (reason: any) => {
-            console.log('Disconnected:', reason);
+        this.socket.on("disconnect", (reason: any) => {
+            console.log('Đã ngắt kết nối:', reason);
         });
     }
 
-    return socket;
-};
-
-export const closeSocket = () => {
-    if (socket) {
-        socket.disconnect();
-        socket = null;
+    public getSocket(): Socket | null {
+        return this.socket;
     }
-};
+
+    public closeSocket() {
+        if (this.socket) {
+            this.socket.disconnect();
+            this.socket = null;
+        }
+    }
+}
+
+export default SocketService;

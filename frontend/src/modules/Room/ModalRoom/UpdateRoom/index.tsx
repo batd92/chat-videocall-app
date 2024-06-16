@@ -100,7 +100,7 @@ const UpdateRoom: React.FC<IProps> = ({
         <>
         <Modal
             title={isUpdateName ? 'Update Name Room' : 'Add Members'}
-            visible={open}
+            open={open}
             onCancel={handleCancel}
             onOk={onSubmit}
             confirmLoading={isLoading}

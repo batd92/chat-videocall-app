@@ -27,7 +27,7 @@ const IncomingCall: React.FC<IModalWrap> = ({
                 onCancel={onCancel}
                 closeIcon={null}
                 footer={null}
-                visible={isOpen}
+                open={isOpen}
             >
                 <Row className='incoming-call-card' justify='center'>
                     <div>
@@ -72,7 +72,7 @@ const IncomingCall: React.FC<IModalWrap> = ({
             onCancel={onCancel}
             closeIcon={null}
             footer={renderFooter()}
-            visible={isOpen}
+            open={isOpen}
             className='incoming-call-modal'
         />
     )

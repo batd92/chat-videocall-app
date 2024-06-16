@@ -1,4 +1,4 @@
-import React, { FormEvent, useCallback, useEffect, useState } from "react";
+import React, { ChangeEvent, FormEvent, MouseEventHandler, useCallback, useEffect, useState } from "react";
 import { Button, Input } from "antd";
 import { useMutation } from "react-query";
 import { UPLOAD_FILE_STATUS, UPLOAD_LIST_TYPE } from "@/utils/constants";
@@ -24,7 +24,7 @@ export const ChatRoom: React.FC<IProps> = ({
         sendMessage,
         startTypingMessage,
         stopTypingMessage,
-    } = useChat(roomId as string);
+    } = useChat();
 
     const [showAttachment, setShowAttachment] = useState<boolean>(false);
     const [inqueryMessage, setInQueryMessage] = useState('');
@@ -76,7 +76,7 @@ export const ChatRoom: React.FC<IProps> = ({
     /**
      * Change message
      */
-    const onChangeMessage = (event: FormEvent<HTMLInputElement>) => {
+    const onChangeMessage = (event: ChangeEvent<HTMLTextAreaElement>) => {
         setInQueryMessage(event.currentTarget.value.replace(/<\/?[^>]*>/g, ""));
     };
 
@@ -93,7 +93,7 @@ export const ChatRoom: React.FC<IProps> = ({
     /**
      * Send message to server by socket
      */
-    const onSendMessageToServer = (event: FormEvent<HTMLInputElement>) => {
+    const onSendMessageToServer = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         console.log('onSendMessageToServer ...', inqueryMessage)
         event.preventDefault();
         cancelTyping();
@@ -116,7 +116,7 @@ export const ChatRoom: React.FC<IProps> = ({
                 })),
             };
             // send messsge to socket
-            sendMessage(payloadFile);
+            sendMessage(payloadFile, roomId);
 
             setInQueryMessage('');
             setUploadedFiles([]);
@@ -130,7 +130,7 @@ export const ChatRoom: React.FC<IProps> = ({
                 type: 'Text',
                 content: inqueryMessage,
             };
-            sendMessage(payloadText);
+            sendMessage(payloadText, roomId);
             setInQueryMessage('');
         }
     };

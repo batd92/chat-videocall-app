@@ -6,7 +6,7 @@ import { getImage } from '@/utils/helpers';
 import './style.scss';
 
 interface IAvatarGroupWrapProps {
-    users: IParticipant[];
+    users: any[];
     isOnline?: boolean;
 }
 

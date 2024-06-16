@@ -81,9 +81,9 @@ export const RoomSearch = ({ setIsSearch }: IProps) => {
 
     // Hàm xử lý khi chọn một phòng
     const onRoomChoose = (room: IRoomDetail) => {
-        if (!room?._id) return;
+        if (!room?.id) return;
         setIsSearch(false);
-        router.push(APP_ROUTER.MESSAGE.CHAT_DETAIL.replace(':id', room?._id));
+        router.push(APP_ROUTER.MESSAGE.CHAT_DETAIL.replace(':id', room?.id));
     };
 
     return (
@@ -114,12 +114,12 @@ export const RoomSearch = ({ setIsSearch }: IProps) => {
                 loader={isFetching ? <h4>Loading...</h4> : <></>}
             >
                 {rooms?.map((room: IRoomDetail) => {
-                const currentFriend = room?.participants?.filter(
-                    (person: IParticipant) => person._id !== currentUser?._id,
-                );
+                const currentFriend = room.participants?.filter((person: any) => {
+                    return person && person._id !== currentUser?._id;
+                  });
                 return (
                     <div
-                    key={room?._id}
+                    key={room?.id}
                     className='room-item'
                     onClick={() => onRoomChoose(room)}
                     >

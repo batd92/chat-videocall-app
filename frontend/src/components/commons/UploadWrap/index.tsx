@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 import './style.scss'
 
 interface IPreviewModal {
-    visible: boolean
+    open: boolean
     image: string
     title: string
 }
@@ -28,7 +28,7 @@ export const UploadWrap = ({
 }: any) => {
     const [fileList, setFileList] = useState<any>([])
     const [previewModal, setPreviewModal] = useState<IPreviewModal>({
-        visible: false,
+        open: false,
         image: '',
         title: '',
     })
@@ -52,7 +52,7 @@ export const UploadWrap = ({
 
         setPreviewModal({
             ...previewModal,
-            visible: true,
+            open: true,
             image: file.url || file.preview,
             title: file.name || file.url.substring(file.url.lastIndexOf('/') + 1),
         })
@@ -61,7 +61,7 @@ export const UploadWrap = ({
     const handleCancelModal = () => {
         setPreviewModal({
             ...previewModal,
-            visible: false,
+            open: false,
         })
     }
 
@@ -113,7 +113,7 @@ export const UploadWrap = ({
                 {fileList.length >= filesLimit ? null : renderUploadButton(listType)}
             </Upload>
             <Modal
-                open={previewModal.visible}
+                open={previewModal.open}
                 title={previewModal.title}
                 footer={null}
                 onCancel={handleCancelModal}
