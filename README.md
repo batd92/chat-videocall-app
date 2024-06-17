@@ -86,6 +86,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Contact
 
-For questions or feedback, please contact [Your Email](mailto:duybatran2110@example.com).
+For questions or feedback, please contact [Ba.Tran](mailto:duybatran2110@example.com).
 
 
