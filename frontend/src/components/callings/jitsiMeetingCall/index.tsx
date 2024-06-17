@@ -17,6 +17,7 @@ const JitsiMeetingCall: React.FC<IModalWrap> = ({
     isOpen = false,
     onCancel,
 }) => {
+
     return (
         <>
             <Modal
@@ -26,15 +27,16 @@ const JitsiMeetingCall: React.FC<IModalWrap> = ({
                 footer={<></>}
             >
                 <JitsiMeeting
-                    domain={process.env.NEXT_PUBLIC_BACKEND_VIDEO_CALL}
+                    domain={process.env.NEXT_PUBLIC_BACKEND_VIDEO_CALL || 'localhost:8443'}
                     roomName={roomNameJitsi}
                     jwt={tokenJitsi}
-                    onApiReady={(externalApi) => { }}
-                    getIFrameRef={(iframeRef) => {
+                    onApiReady={() => { }}
+                    getIFrameRef={(iframeRef: any) => {
                         iframeRef.style.height = '80vh'
                     }}
-                    onReadyToClose={() => {
-                        onCancel()
+                    onReadyToClose={() => { onCancel() }}
+                    configOverwrite ={{
+                        
                     }}
                 />
             </Modal>

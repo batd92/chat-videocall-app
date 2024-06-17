@@ -51,7 +51,6 @@ export interface IGetMessagesResponse {
     actions: IAction,
     messageRepy?: IGetMessagesResponse;
     seen: any;
-
 }
 export interface IUserMessage {
     id: string

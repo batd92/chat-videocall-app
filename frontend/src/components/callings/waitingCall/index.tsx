@@ -11,8 +11,7 @@ interface IModalWrap {
 
 const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
     const userId = 1;
-
-    const participantFirst = room?.participants?.find((e) => e._id !== String(userId));
+    const participantFirst = room.participants?.find((participant: any) => participant._id !== userId);
 
     const renderFooter = () => (
         <div className='waiting-call-card-footer'>
@@ -44,10 +43,10 @@ const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
                             </h1>
                             {room.participants.map((participant: any, index: number) => (
                                 <Avatar
-                                    key={participant._id + index} // <-- Add key prop here
+                                    key={`${participant._id}-${index}`} // Ensure unique key
                                     className='avatar'
                                     src={participant.avatarUrl}
-                                    alt='Participant avatar'
+                                    alt='participant avatar'
                                 />
                             ))}
                         </div>
@@ -58,10 +57,10 @@ const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
                             </h1>
                             {participantFirst && (
                                 <Avatar
-                                    key={participantFirst._id} // <-- Add key prop here
+                                    key={participantFirst._id} // Use the participant's id as the key
                                     className='avatar'
                                     src={participantFirst.avatarUrl}
-                                    alt='Participant avatar'
+                                    alt='participant avatar'
                                 />
                             )}
                         </div>

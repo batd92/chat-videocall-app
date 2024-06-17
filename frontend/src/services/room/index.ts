@@ -4,6 +4,10 @@ import { IGetRoomResponse } from '@/interface/response/room'
 import http from '../axiosClient'
 import { ENDPOINT } from '../endpoint'
 
+type RoomUpdateParams = {
+    name: string;
+    userIds?: string[]; // Assuming userIds is an array of strings, adjust as necessary
+};
 class Room {
     getRooms = async (body: IGetRoomsRequest) => {
         return http.get(ENDPOINT.ROOM.GET_ROOMS, {
@@ -32,9 +36,8 @@ class Room {
             }
         })
     }
-
-
-    updateRoomName = async (id: string, body: { name: string }): Promise<any> => {
+      
+    updateRoomName = async (id: string, body: { name: string , userIds?: string[]}): Promise<any> => {
         const res: any = await http.put(ENDPOINT.ROOM.UPDATE_ROOM_NAME.replace(':id', id), body)
         return res
     }

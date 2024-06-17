@@ -8,7 +8,6 @@ import { uniqBy } from 'lodash'
 import { useAuth } from '@/providers/auth/index'
 import { IMessage, ITypingUser } from '@/interface/common/index'
 import { IGetRoomResponse, IParticipant } from '@/interface/response/room/index'
-import { TypeDataRoom } from '@/interface/socket/index'
 import { IGetMessagesRequest } from '@/interface/request/message/index'
 import { RoomService } from '@/services/room/index'
 import { MessageService } from '@/services/message/index'
@@ -41,13 +40,17 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     const [isOpenMeeting, setIsOpenMeeting] = useState<boolean>(false)
     const {
         lastMessage,
-        typingUsers
+        typingUsers,
+        startCall,
+        roomTalkingInJitsi,
+        setRoomTalkingInJitsi,
+        rejectCall
     } = useChat();
 
     // current room selected
     const [roomCurrentSelected, setRoomCurrentSelected] = useState<IGetRoomResponse>()
+
     // data of room in talk
-    const [roomTalkingInJitsi, setRoomTalkingInJitsi] = useState<TypeDataRoom>()
     const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null)
     const [searchMsgId, setSearchMsgId] = useState<string | null>(null)
     const [activeMessage, setActiveMessage] = useState<string>('')
@@ -90,6 +93,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
                         user: user || null,
                     }
                 })
+                console.log('get all message .....');
                 if (dataApi) {
                     const resultData = params.isJumpToMessages
                         ? dataApi
@@ -150,17 +154,19 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     useEffect(() => {
         console.log('monitoring last message', lastMessage, typingUsers);
         if (lastMessage) {
-            setOfficialMessages((prevMessages: any) => uniqBy([lastMessage, ...prevMessages], '_id'));
-            setTimeout(() => {
-                const element = document.getElementById(lastMessage._id);
-                if (element) {
-                    element.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'nearest',
-                        inline: 'nearest',
-                    });
-                }
-            }, 100);
+            if (lastMessage.roomId === roomId) {
+                setOfficialMessages((prevMessages: any) => uniqBy([lastMessage, ...prevMessages], '_id'));
+                setTimeout(() => {
+                    const element = document.getElementById(lastMessage._id);
+                    if (element) {
+                        element.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'nearest',
+                            inline: 'nearest',
+                        });
+                    }
+                }, 100);
+            }
         }
     }, [lastMessage]);
     
@@ -170,10 +176,9 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
      * @param roomId 
      */
     const onStartCall = (roomId: string) => {
-        setIsStartCall(true)
-        
-        // TODO:
-        // send event start call to socket
+        setIsStartCall(true);
+        setIsOpenMeeting(true);
+        startCall(roomId);
         const timerIdCancel = setTimeout(() => {
             onCancelCall(roomId)
         }, TIMEOUT_CALL)
@@ -185,10 +190,10 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
      * end call
      */
     const onEndCall = (roomId: string) => {
-        setIsOpenMeeting(false)
-        setRoomTalkingInJitsi(undefined)
-        // TODO:
-        // send event end call to socket
+        setIsStartCall(false);
+        setIsOpenMeeting(false);
+        setRoomTalkingInJitsi(null);
+        rejectCall(roomId);
     }
 
     /**
@@ -249,7 +254,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     
         // Ensure `roomCurrentSelected` is properly typed and defined
         const participants = roomCurrentSelected?.participants
-            ?.filter((other: IParticipant) => other._id !== currentUser?._id)
+            ?.filter((other: any) => other.id !== currentUser?._id)
             .map((e: IParticipant) => ({
                 ...e,
                 customIndexRead: roomCurrentSelected.totalMessage - e.indexMessageRead,
@@ -300,8 +305,8 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
                 {roomTalkingInJitsi && (
                     <JitsiMeetingCall
                         roomNameJitsi={roomTalkingInJitsi.roomName}
-                        tokenJitsi={roomTalkingInJitsi.token}
-                        onCancel={() => onEndCall(roomTalkingInJitsi.room._id)}
+                        tokenJitsi={roomTalkingInJitsi.jitsiToken}
+                        onCancel={() => onEndCall(roomTalkingInJitsi.roomId)}
                         isOpen={isOpenMeeting}
                     />
                 )}

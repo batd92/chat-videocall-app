@@ -1,0 +1,3 @@
+*.swp
+.env*
+docker-compose.override.yml

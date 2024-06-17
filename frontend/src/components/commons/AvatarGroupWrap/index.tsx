@@ -15,8 +15,8 @@ export const AvatarGroupWrap: React.FC<IAvatarGroupWrapProps> = ({
     isOnline,
 }) => {
     const renderAvatars = () => {
-        return users?.slice(0, 2)?.map((user) => (
-            <div className='avatar' key={user._id}>
+        return users?.slice(0, 2)?.map((user, index: number) => (
+            <div className='avatar' key={user._id || index}>
                 <img src={getImage(user.avatarUrl, IMAGE_TYPE.AVATAR)} alt='' />
             </div>
         ));

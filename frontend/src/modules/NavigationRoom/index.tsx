@@ -11,7 +11,7 @@ import InfiniteScroll from 'react-infinite-scroll-component'
 import { useQuery } from 'react-query'
 import { RoomItem } from '../NavigationRoom/RoomItem'
 import AccountDropdown from '../Accounts'
-import ModalNewRoom from '../Room/ModalRoom/CreateRoom'
+import CreateRoom from '../Room/ModalRoom/CreateRoom'
 import './style.scss'
 import { RoomSearch } from './RoomSearch'
 
@@ -96,18 +96,18 @@ export const NavigationRoom = () => {
                     next={refetchRoom}
                     loader={<h4>Loading...</h4>}
                 >
-                    {rooms?.map((room: any) => (
-                    <RoomItem
-                        key={room?._id}
-                        room={room}
-                    />
+                    {rooms?.map((room: any, index: any) => (
+                        <RoomItem
+                            key={room?._id || index}
+                            room={room}
+                        />
                     ))}
                 </InfiniteScroll>
                 </div>
             </SpinWrap>
             </>
         )}
-        <ModalNewRoom
+        <CreateRoom
             open={isOpenCreateRoom}
             onCancel={() => setIsOpenCreateRoom(false)}
             onOk={handleOkNewRoomModal}

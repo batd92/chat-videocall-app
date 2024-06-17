@@ -9,8 +9,6 @@ import { UserModule } from '../../modules/user/user.module'; // Ensure the corre
     imports: [
         UserModule,
         ConfigModule,
-        DatabaseModule,
-        CacheModule.register(),
     ],
     controllers: [],
     providers: [JitsiorgService],

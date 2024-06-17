@@ -27,8 +27,7 @@ export class RoomService {
     }
 
     getRooms(search?: string): Observable<{ rooms: Room[], lastRecord: string | null }> {
-        const query = search ? { 'name': { $regex: search, $options: 'i' } } : {};
-
+        const query = search ? { 'name': { $regex: search.replace(/"/g, ''), $options: 'i' } } : {};
         return from(
             this.roomModel.find(query)
                 .sort({ 'createdAt': -1 })
@@ -42,7 +41,7 @@ export class RoomService {
                 })
                 .exec()
                 .then(rooms => {
-                    const lastRecord = rooms[rooms.length - 1].id.toString();
+                    const lastRecord = rooms && rooms.length > 0 ? rooms[rooms.length - 1].id.toString() : '';
                     return {
                         rooms: rooms,
                         lastRecord: lastRecord

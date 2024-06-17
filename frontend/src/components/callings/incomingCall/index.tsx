@@ -38,10 +38,10 @@ const IncomingCall: React.FC<IModalWrap> = ({
                                         <h1 className='name'>
                                             <strong>{conversation.name}</strong>
                                         </h1>
-                                        {conversation.participants.map((participant: any) => (
+                                        {conversation.participants.map((participant: any, index: number) => (
                                             <Avatar
                                                 className='avatar'
-                                                key={participant._id}
+                                                key={participant._id || index}
                                                 src={participant.avatarUrl}
                                                 alt='description of image'
                                             />

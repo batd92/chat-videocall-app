@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, MouseEventHandler, useCallback, useEffect, useState } from "react";
+import React, { ChangeEvent, FormEvent, KeyboardEventHandler, MouseEventHandler, useCallback, useEffect, useState } from "react";
 import { Button, Input } from "antd";
 import { useMutation } from "react-query";
 import { UPLOAD_FILE_STATUS, UPLOAD_LIST_TYPE } from "@/utils/constants";
@@ -93,7 +93,7 @@ export const ChatRoom: React.FC<IProps> = ({
     /**
      * Send message to server by socket
      */
-    const onSendMessageToServer = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    const onSendMessageToServer = (event: any) => {
         console.log('onSendMessageToServer ...', inqueryMessage)
         event.preventDefault();
         cancelTyping();
@@ -166,6 +166,7 @@ export const ChatRoom: React.FC<IProps> = ({
                         value={inqueryMessage}
                         onKeyPress={startTyping}
                         onKeyUp={stopTyping}
+                        onPressEnter={onSendMessageToServer}
                     />
                 </div>
                 <Button

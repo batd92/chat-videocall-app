@@ -36,9 +36,9 @@ export const MediaDocsContainer = ({ list }: IMediaDocs) => {
         <div className="media-content">
 
             {list?.length ? <div className='media-item__listDocs'>
-                {list?.map((item, index) => {
+                {list?.map((item, index: number) => {
                     return (
-                        <div key={`${item.messageId}_${index}`} className='media-item__listDocs__item'>
+                        <div key={item.messageId || index} className='media-item__listDocs__item'>
                             <div className='media-item__listDocs__item__content'>
                                 <div className='media-item__listDocs__item__content__icon'><FileTextOutlined /></div>
                                 <div className='media-item__listDocs__item__content__name'>

@@ -12,8 +12,6 @@ interface IProps {
     open: boolean
     onCancel: () => void
     onOk: (result?: any) => void
-    isUpdateName: boolean
-    isUpdateMember: boolean
     roomDetail?: IGetRoomResponse
     setRoomCurrentSelected: Function
     refresh?: () => void
@@ -23,8 +21,6 @@ const UpdateRoom: React.FC<IProps> = ({
     open,
     onCancel,
     onOk,
-    isUpdateName,
-    isUpdateMember,
     roomDetail,
     setRoomCurrentSelected,
 }) => {
@@ -32,6 +28,7 @@ const UpdateRoom: React.FC<IProps> = ({
     const [selectedMembers, setSelectedMembers] = useState<string[]>([])
     const [roomName, setRoomName] = useState<string>(roomDetail?.name || '')
     const [form] = useForm()
+
     useQuery('users', UserService.getUsers, {
         enabled: open,
         onSuccess: (data: any) => {
@@ -41,18 +38,9 @@ const UpdateRoom: React.FC<IProps> = ({
     const { mutate: mutateUpdateRoom, isLoading } =
         useMutation(
         () => {
-            let roomToSend = roomName
-            if (!roomName && isUpdateName) {
-                roomToSend = getRoomName(users, selectedMembers)
-            }
-            if (isUpdateMember) {
-                return RoomService.invitesToRoom({
-                    userIds: selectedMembers,
-                }, roomDetail?._id || '')
-            }
-
             return RoomService.updateRoomName(roomDetail?._id || '', {
-                name: roomToSend,
+                name: roomName || getRoomName(users, selectedMembers),
+                userIds: selectedMembers,
             })
         },
         {
@@ -99,19 +87,18 @@ const UpdateRoom: React.FC<IProps> = ({
     return (
         <>
         <Modal
-            title={isUpdateName ? 'Update Name Room' : 'Add Members'}
+            title={'Update Name Room'}
             open={open}
             onCancel={handleCancel}
             onOk={onSubmit}
             confirmLoading={isLoading}
         >
             <Form form={form} layout='vertical' name='basic' autoComplete='off'>
-            {isUpdateName && (
+            {
                 <Form.Item label='Room Name' name='roomName' initialValue={roomName}>
                 <Input value={roomName} onChange={handleRoomNameChange} />
-                </Form.Item>
-            )}
-            {isUpdateMember && (
+                </Form.Item>}
+            {
                 <Form.Item label='Members' name='members'>
                 <Select
                     mode='multiple'
@@ -120,15 +107,14 @@ const UpdateRoom: React.FC<IProps> = ({
                     showSearch
                     filterOption={filterFriends}
                 >
-                    {_.differenceBy(users || [], roomDetail?.participants || [], '_id').map((user: any) => (
-                        <Select.Option key={user._id} value={user._id}>
+                    {_.differenceBy(users || [], roomDetail?.participants || [], '_id').map((user: any, index: number) => (
+                        <Select.Option key={user._id || index} value={user._id}>
                             <Avatar src={user.avatarUrl} />
                             &nbsp;&nbsp;{user.firstName} {user.lastName}
                         </Select.Option>
                     ))}
                 </Select>
-                </Form.Item>
-            )}
+                </Form.Item>}
             </Form>
         </Modal>
         </>

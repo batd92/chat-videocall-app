@@ -7,8 +7,8 @@ import { SocketsStateModule } from '../../core/socket-state/socket-state.module'
 @Module({
     imports: [
         RoomModule,
+        SocketsStateModule,
         JitsiorgModule,
-        SocketsStateModule
     ],
     providers: [VideoCallGateway],
 })

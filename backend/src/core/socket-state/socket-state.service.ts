@@ -26,13 +26,14 @@ export class SocketStateService {
 
     public addUserJoinRoom(roomId: string, userId: string, socket: Socket): boolean {
         const roomUsernameSockets = this.roomUsernameSockets.get(roomId) || [];
-        const existingUsernameRecord = roomUsernameSockets.find(us => us.userId === userId);
+        const existingUsernameRecord = roomUsernameSockets.find(us => us.userId === userId && us.socketId === socket.id);
         if (existingUsernameRecord) return false;
 
         this.roomUsernameSockets.set(roomId, [...roomUsernameSockets, { username: '', socketId: socket.id, userId }]);
         this.socketState.set(socket.id, socket);
         this.socketRoomState.set(socket.id, roomId);
         console.log('Room: ', this.roomUsernameSockets.get(roomId));
+        this.getRoomState(roomId);
     }
 
     public removeSocket(socket: ISocket) {
@@ -57,33 +58,28 @@ export class SocketStateService {
     }
 
     public getAllSocketForRoom(roomId: string): Array<IUserameSocket> {
+        console.log('getAllSocketForRoom ', this.roomUsernameSockets.get(roomId))
+
         return this.roomUsernameSockets.get(roomId) || [];
     }
 
-    public getRoomState(payload: VideoCallRequest, socket: Socket): IRoomState {
-        const room = this.roomStates.get(payload.roomId);
+    public getRoomState(roomId: string): IRoomState {
+        const room = this.roomStates.get(roomId);
         if (room) return room;
-
-        const userSocket = [
-            {
-                userId: payload.userId,
-                socketId: socket.id
-            }
-        ];
 
         const roomState = {
             jitsiName: '',
             jitsiToken: '',
-            userOnlines: userSocket,
+            userOnlines: [],
             userJoined: [],
             hostId: '',
             userRejecteds: [],
             inRoom: [],
             owner: '',
             ownerVideoCall: '',
-
         }
-        this.roomStates.set(payload.roomId, roomState);
+        this.roomStates.set(roomId, roomState);
+        return roomState;
     }
 
     public updateRoomState(payload: VideoCallRequest, socket: Socket, jitsiToken: string, jitsiName: string): void {

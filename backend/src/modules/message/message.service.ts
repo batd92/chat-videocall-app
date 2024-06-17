@@ -24,7 +24,7 @@ export class MessageService {
     findAll(inquery: QueryMessageDto, roomId: string): Observable<{ data: Partial<Message[]>; status: string }> {
         let query = this.messageModel.find({ roomId });
         if (inquery.keyword) {
-            query = query.where('title').regex(new RegExp('.*' + inquery.keyword + '.*', 'i'));
+            query = query.where('content').regex(new RegExp('.*' + inquery.keyword.replace(/"/g, '') + '.*', 'i'));
         }
 
         if (inquery.next_cursor) {
@@ -104,7 +104,6 @@ export class MessageService {
      */
     onMessageFromSocket(data: TextRequest): Observable<Message> {
         return from(this.messageModel.create(this.buildMessageRequest(data))).pipe(
-            // populate('userId') trả về các thuộc tính: _id email username avatar
             mergeMap((message) => from(this.messageModel.populate(message, {
                     path: 'userId',
                     select: '_id email username avatar'

@@ -40,7 +40,7 @@ const AccountDropdown = () => {
                     key: '1-2',
                     label: (
                         <div className='menu-label' onClick={handleLogout}>
-                            <LogoutOutlined /> Đăng xuất
+                            <LogoutOutlined /> Logout
                         </div>
                     ),
                 },
@@ -56,9 +56,13 @@ const AccountDropdown = () => {
         >
             <Button
                 type='link'
-                icon={<AvatarWrap src={currentUser?.avatar!} size={36} />}
                 style={{ width: 36, height: 36, padding: 0 }}
-            />
+            >
+                <div className="online-status">
+                    <AvatarWrap src={currentUser?.avatar!} size={36} />
+                    <div className="status-indicator"></div>
+                </div>
+            </Button>
         </Dropdown>
     )
 }

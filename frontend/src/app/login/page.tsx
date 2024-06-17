@@ -64,7 +64,7 @@ const LoginPage = () => {
         if (notificationPermissionStatus !== 'granted') {
             if (
                 window.confirm(
-                'Thông báo hiện tại đang bị chặn, bạn có muốn bỏ qua hay không ?',
+                    "The current notification is blocked. Do you want to bypass it?"
                 )
             ) {
                 mutateLogin(values)

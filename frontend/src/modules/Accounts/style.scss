@@ -1,11 +1,27 @@
 .c-dropdown {
-  .menu-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+    .menu-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
 
-  .group-label {
-    font-size: 12px;
-  }
+    .group-label {
+        font-size: 12px;
+    }
+}
+
+.online-status {
+    position: relative;
+    display: inline-block;
+
+    .status-indicator {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        background-color: #00ff00;
+        border-radius: 50%;
+        border: 2px solid white;
+    }
 }

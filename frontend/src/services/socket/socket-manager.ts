@@ -21,7 +21,7 @@ class SocketService {
         const token = getCookie('access_token') || '';
         
         if (!token) {
-            console.error('Không tìm thấy access token, không thể thiết lập kết nối socket.');
+            console.error('Access token not found, unable to establish socket connection.');
             return;
         }
 
@@ -35,15 +35,15 @@ class SocketService {
         });
 
         this.socket.on("connect", () => {
-            console.log('Đã kết nối với socket id:', this.socket!.id);
+            console.log('Connected to socket with id:', this.socket!.id);
         });
-
+        
         this.socket.on("connect_error", (error: any) => {
-            console.error('Lỗi kết nối:', error);
+            console.error('Connection error:', error);
         });
-
+        
         this.socket.on("disconnect", (reason: any) => {
-            console.log('Đã ngắt kết nối:', reason);
+            console.log('Disconnected:', reason);
         });
     }
 

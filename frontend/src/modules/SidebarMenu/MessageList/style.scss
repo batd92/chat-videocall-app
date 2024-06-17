@@ -1,0 +1,49 @@
+.message-container {
+    overflow: auto;
+    width: 100%;
+}
+
+.message-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding-bottom: 10px;
+}
+
+.message-details {
+    width: 100%;
+    font-size: 14px;
+    color: #333;
+}
+
+.message-username {
+    font-size: 12px;
+    color: #333;
+}
+
+.message-timestamp {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.highlight {
+    background-color: yellow;
+}
+
+.no-messages {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #666;
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    margin-top: 20px;
+}

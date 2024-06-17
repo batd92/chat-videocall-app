@@ -59,27 +59,34 @@ export const RoomSearch = ({ setIsSearch }: IProps) => {
         },
     );
 
-    // Hàm xử lý khi thay đổi nội dung tìm kiếm
+    /**
+     * Function to handle search content change
+     * @param e
+     */
     const onHandleSearch = (e: any) => {
         console.log(e.target.value);
         debouncedSearch(e.target.value);
     };
 
-    // Hàm debounce cho việc tìm kiếm
+    
     const debouncedSearch = useCallback(
         debounce(
         (nextValue) =>
             setParams((prev: any) => ({
-            ...prev,
-            keyword: JSON.stringify(nextValue),
-            lastRecord: '',
+                ...prev,
+                keyword: JSON.stringify(nextValue),
+                lastRecord: '',
             })),
         500,
         ),
         [],
     );
 
-    // Hàm xử lý khi chọn một phòng
+    /**
+     * Select one room
+     * @param room 
+     * @returns 
+     */
     const onRoomChoose = (room: IRoomDetail) => {
         if (!room?.id) return;
         setIsSearch(false);
@@ -113,43 +120,43 @@ export const RoomSearch = ({ setIsSearch }: IProps) => {
                 next={refetchRoom}
                 loader={isFetching ? <h4>Loading...</h4> : <></>}
             >
-                {rooms?.map((room: IRoomDetail) => {
-                const currentFriend = room.participants?.filter((person: any) => {
-                    return person && person._id !== currentUser?._id;
-                  });
-                return (
-                    <div
-                    key={room?.id}
-                    className='room-item'
-                    onClick={() => onRoomChoose(room)}
-                    >
-                    <div className='avatar'>
-                        {room.isGroup && !room?.avatarUrl ? (
-                        <AvatarGroupWrap
-                            users={room?.participants}
-                            isOnline={room?.hasOnline}
-                        />
-                        ) : (
-                        <AvatarWrap
-                            size={48}
-                            src={
-                            room?.avatarUrl ||
-                            getImage(
-                                currentFriend?.[0]?.avatarUrl!,
-                                IMAGE_TYPE.AVATAR,
-                            )
-                            }
-                            isOnline={room?.hasOnline}
-                        />
-                        )}
-                    </div>
-                    <div className='name'>
-                        {room?.name
-                        ? trunMessage(room?.name, 26)
-                        : trunMessage(currentFriend[0].name, 26)}
-                    </div>
-                    </div>
-                );
+                {rooms?.map((room: IRoomDetail, index: number) => {
+                    const currentFriend = room.participants?.filter((person: any) => {
+                        return person && person._id !== currentUser?._id;
+                    });
+                    return (
+                        <div
+                        key={room?.id || index}
+                        className='room-item'
+                        onClick={() => onRoomChoose(room)}
+                        >
+                        <div className='avatar'>
+                            {room.isGroup && !room?.avatarUrl ? (
+                            <AvatarGroupWrap
+                                users={room?.participants}
+                                isOnline={room?.hasOnline}
+                            />
+                            ) : (
+                            <AvatarWrap
+                                size={48}
+                                src={
+                                room?.avatarUrl ||
+                                getImage(
+                                    currentFriend?.[0]?.avatarUrl!,
+                                    IMAGE_TYPE.AVATAR,
+                                )
+                                }
+                                isOnline={room?.hasOnline}
+                            />
+                            )}
+                        </div>
+                        <div className='name'>
+                            {room?.name
+                            ? trunMessage(room?.name, 26)
+                            : trunMessage(currentFriend[0].name, 26)}
+                        </div>
+                        </div>
+                    );
                 })}
             </InfiniteScroll>
             </div>

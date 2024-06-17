@@ -98,10 +98,10 @@ const CreateRoom: React.FC<IProps> = ({
                 showSearch
                 filterOption={filterUsers}
                 >
-                {users.map((user: any) => (
-                    <Select.Option key={user._id} value={user._id}>
-                    <Avatar src={user.avatarUrl} />
-                    &nbsp;&nbsp;{user.firstName + user.lastName}
+                {users.map((user: any, index: number) => (
+                    <Select.Option key={user._id || index} value={user._id}>
+                        <Avatar src={user.avatarUrl} />
+                        &nbsp;&nbsp;{user.firstName + user.lastName}
                     </Select.Option>
                 ))}
                 </Select>

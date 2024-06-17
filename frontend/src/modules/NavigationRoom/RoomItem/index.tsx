@@ -66,7 +66,6 @@ export const RoomItem: React.FC<IProps> = ({ room }) => {
         if (countUnreadMessage > 0) {
             // Xử lý khi có tin nhắn chưa đọc
         }
-        // Chuyển đến trang chat detail
         router.push(APP_ROUTER.MESSAGE.CHAT_DETAIL.replace(':id', room?.id));
     };
 

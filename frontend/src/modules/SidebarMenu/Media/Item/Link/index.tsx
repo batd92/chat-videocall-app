@@ -11,9 +11,9 @@ export const MediaLinksContainer = ({ list }: IMediaLinks) => {
     return (
         <div className="media-content">
             {list?.length ? <div className='media-item__listLinks'>
-                {list?.map((item, index) => {
+                {list?.map((item, index: number) => {
                     return (
-                        <div key={`${item.messageId}_${index}`} className='media-item__listLinks__item'>
+                        <div key={item.messageId || index} className='media-item__listLinks__item'>
                             <div className='media-item__listLinks__item__content'>
                                 <div className='media-item__listLinks__item__content__icon'><LinkOutlined /></div>
                                 <div className='media-item__listLinks__item__content__name'>

@@ -6,7 +6,7 @@ interface ISpinWrapProps extends SpinProps {
 }
 
 export const SpinWrap: React.FC<ISpinWrapProps> = ({
-    tip = 'Đang tải',
+    tip = 'Loading ...',
     className,
     children,
     ...props

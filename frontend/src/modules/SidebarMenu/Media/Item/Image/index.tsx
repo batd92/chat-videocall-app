@@ -39,7 +39,7 @@ export const MediaImagesContainer = ({ list }: IMediaImages) => {
             {list?.length ? <div className='media-item__listImg'>
                 {list?.map((item, index: number) => {
                     return (
-                        <div key={`${item.messageId}_${index}`} className='media-item__listImg__item'>
+                        <div key={item.messageId || index} className='media-item__listImg__item'>
                             <Image
                                 key={index}
                                 width="100%"

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import { Button, Collapse, CollapseProps, Drawer } from 'antd'
 import { EditOutlined, LogoutOutlined } from '@ant-design/icons'
-import ModalNewRoom from '../Room/ModalRoom/CreateRoom'
+import UpdateRoom from '../Room/ModalRoom/UpdateRoom'
 import { IGetRoomResponse, TypeFileStorage } from '@/interface/response'
 import { useQuery } from 'react-query'
 import { MessageService } from '@/services'
@@ -14,6 +14,7 @@ import SearchInput from './SearchInput'
 import UploadAvatar from './UploadAvatar'
 import MediaContainer from './MediaContainer'
 import { IMessage } from '@/interface/common'
+import { IGetMessagesResponse } from '@/interface/response/message/index'
 
 interface IProps {
     open: boolean
@@ -37,11 +38,11 @@ const SidebarMenu: React.FC<IProps> = ({
     setRoomCurrentSelected,
     handleRedirectSearch,
 }) => {
-    const [isUpdateName, setIsUpdateName] = useState(false)
-    const [isAddMembers, setIsAddMembers] = useState(false)
+    console.log('SidebarMenu ....')
+    const [isOpenModel, setIsOpenModel] = useState(false)
     const [valueSearch, setValueSearch] = useState<string>('')
     const [mediaActivedKey, setMediaActivedKey] = useState<TypeFileStorage | null>(null);
-    const [officialMessages, setOfficialMessages] = useState<IMessage[]>([])
+    const [officialMessages, setOfficialMessages] = useState<IGetMessagesResponse[]>([])
     const [params, setParams] = useState<IGetMessagesKeyWordRequest>({
         limit: 20,
         lastRecord: '',
@@ -49,11 +50,11 @@ const SidebarMenu: React.FC<IProps> = ({
     })
 
     const handleUpdateName = useCallback(() => {
-        setIsUpdateName(true)
+        setIsOpenModel(true)
     }, [])
 
     const handleAddmembers = useCallback(() => {
-        setIsAddMembers(true)
+        setIsOpenModel(true)
     }, [])
 
     const handleSearchMessages = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,13 +136,11 @@ const SidebarMenu: React.FC<IProps> = ({
     }, [roomDetail, setRoomCurrentSelected, handleUpdateName, handleAddmembers])
 
     const handleOkNewRoomModal = useCallback(() => {
-        setIsUpdateName(false)
-        setIsAddMembers(false)
+        setIsOpenModel(false)
     }, [])
 
     const handleCancelNewRoomModal = useCallback(() => {
-        setIsUpdateName(false)
-        setIsAddMembers(false)
+        setIsOpenModel(false)
     }, [])
 
     return (
@@ -157,27 +156,29 @@ const SidebarMenu: React.FC<IProps> = ({
                             <SearchInput value={valueSearch} onChange={handleSearchMessages} />
                         </div>
                         <br></br>
-                        {officialMessages.length > 0 && (
+                        { (valueSearch && valueSearch.length > 0) && (
                             <MessageList
                                 messages={officialMessages}
-                                participants={roomDetail.participants}
                                 onMessageClick={handleRedirectSearch}
                                 hasMore={rawMessages?.data?.lastRecord !== ''}
                                 loadMore={refetchRawMessages}
                                 isLoading={searchMsgLoading}
+                                keyword={valueSearch}
                             />
                         )}
                     </div>
                     <div className='c-message-menu__content'>
                         <Collapse items={collapseItems} bordered={false} expandIconPosition='end' />
                     </div>
-                    {(isUpdateName || isAddMembers) && (
-                        <ModalNewRoom
-                            open={isUpdateName || isAddMembers}
+                    {
+                        <UpdateRoom
+                            open={isOpenModel}
+                            roomDetail={roomDetail}
                             onOk={handleOkNewRoomModal}
                             onCancel={handleCancelNewRoomModal}
+                            setRoomCurrentSelected={setRoomCurrentSelected}
                         />
-                    )}
+                    }
                 </>
             ) : (
                 <MediaContainer mediaKey={mediaActivedKey} onBack={() => setMediaActivedKey(null)} list={[]} />
