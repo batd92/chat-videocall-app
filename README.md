@@ -1,6 +1,8 @@
 # Real-time Chat Application
 
-This repository contains a real-time chat application built using NestJS, Redis, MongoDB for the backend, and Next.js for the frontend.
+
+This repository contains a real-time chat application built using NestJS, Redis, MongoDB for the backend, and Next.js for the frontend. It also integrates Jitsi Meet for video conferencing.
+
 
 ## Installation and Setup
 
