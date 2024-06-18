@@ -28,22 +28,39 @@ export interface VideoStartResponse {
 
 const useChat = () => {
     const { currentUser } = useAuth();
+
+    // socket state
     const socketRef = useRef(socketService.getSocket());
+
+    // room selected state
     const [roomId, setRoomId] = useState<string | null>(null);
+
+    // last message state
     const [lastMessage, setLastMessage] = useState<IGetMessagesResponse | null>(null);
+
+    // user typing state
     const [typingUsers, setTypingUsers] = useState<ITypingUser[]>([]);
-    const [joinedRoom, setJoinedRoom] = useState<boolean>(false);
+
+    // meeting state
+    const [joinedMeeting, setJoinedMeeting] = useState<boolean>(false);
+
+    // data when call
     const [roomTalkingInJitsi, setRoomTalkingInJitsi] = useState<VideoStartResponse | null>(null);
+
+    // connect socket by room state
+    const [roomConnectedSocket, setRoomConnectedSocket] = useState<boolean>(false);
 
     /**
      * Join room
      */
     const joinRoom = useCallback((roomId: string) => {
-        if (!socketRef.current || !currentUser || joinedRoom) return;
+        if (!socketRef.current || !currentUser) return;
+        if (roomConnectedSocket) return;
+
         const payload = { roomId, userId: currentUser._id, senderId: socketRef.current.id };
         socketRef.current.emit('joinRoom', payload);
-        setJoinedRoom(true);
-    }, [currentUser, joinedRoom]);
+        setRoomConnectedSocket(true);
+    }, [currentUser, roomConnectedSocket]);
 
     /**
      * Leave room
@@ -51,7 +68,8 @@ const useChat = () => {
     const leaveRoom = useCallback((roomId: string) => {
         if (!socketRef.current || !currentUser) return;
         socketRef.current.emit('leaveRoom', roomId);
-        setJoinedRoom(false);
+        setJoinedMeeting(false);
+        setRoomConnectedSocket(false);
     }, [currentUser]);
 
     /**
@@ -89,99 +107,120 @@ const useChat = () => {
      * Start a video call
      */
     const startCall = useCallback((roomId: string) => {
-        if (!socketRef.current || !currentUser || joinedRoom) return;
-        const senderId = socketRef.current.id || '';
-        const payload: VideoCallRequest = { roomId, userId: currentUser._id, senderId: senderId };
-        socketRef.current.emit('startCall', payload);
-    }, [currentUser, joinedRoom]);
+        if (!socketRef.current || !currentUser || joinedMeeting) return;
+        const socket = socketRef.current;
+        if (socket && roomId) {
+            const payload: VideoCallRequest = { roomId, userId: currentUser._id, senderId: socket.id };
+            socket.emit('startCall', payload);
+        }
+    }, [currentUser, joinedMeeting]);
 
     /**
      * Join an existing video call
      */
     const joinCall = useCallback((roomId: string) => {
-        if (!socketRef.current || !currentUser || joinedRoom) return;
-        const senderId = socketRef.current.id || '';
-        const payload: VideoCallRequest = { roomId, userId: currentUser._id, senderId: senderId };
-        socketRef.current.emit('joinCall', payload);
-        setJoinedRoom(true);
-    }, [currentUser, joinedRoom]);
+        if (!socketRef.current || !currentUser || joinedMeeting) return;
+        const socket = socketRef.current;
+        if (socket && roomId) {
+            const payload: VideoCallRequest = { roomId, userId: currentUser._id, senderId: socket.id };
+            socket.emit('joinCall', payload);
+            setJoinedMeeting(true);
+        }
+    }, [currentUser, joinedMeeting]);
 
     /**
      * Leave a video call
      */
     const leaveCall = useCallback((roomId: string) => {
         if (!socketRef.current || !currentUser) return;
-        const senderId = socketRef.current.id || '';
-        const payload: VideoCallRequest = { roomId, userId: currentUser._id, senderId: senderId };
-        socketRef.current.emit('leaveCall', payload);
-        setJoinedRoom(false);
-        setRoomTalkingInJitsi(null);
-    }, [currentUser]);
+        const socket = socketRef.current;
+        if (socket && roomId) {
+            const payload: VideoCallRequest = { roomId, userId: currentUser._id, senderId: socket.id };
+            socket.emit('leaveCall', payload);
+            setJoinedMeeting(false);
+            setRoomTalkingInJitsi(null);
+        }
+    }, [currentUser, roomId]);
 
     /**
      * Reject a video call
      */
     const rejectCall = useCallback((roomId: string) => {
         if (!socketRef.current || !currentUser) return;
-        const senderId = socketRef.current.id || '';
-        const payload: VideoCallRequest = { roomId, userId: currentUser._id, senderId: senderId };
-        socketRef.current.emit('rejectCall', payload);
-    }, [currentUser]);
+        const socket = socketRef.current;
+        if (socket && roomId) {
+            const payload: VideoCallRequest = { roomId, userId: currentUser._id, senderId: socket.id };
+            socket.emit('rejectCall', payload);
+            setJoinedMeeting(false);
+            setRoomTalkingInJitsi(null);
+        }
+    }, [currentUser, roomId]);
 
-
-
+    // Effect to handle socket events
     useEffect(() => {
-        console.log('useEffect ..........')
+        console.log('useEffect ..........');
         const socket = socketRef.current;
 
         if (!socket) {
             return;
         }
 
-        const handleUserLeaveChat = (user: User) => {
-            setTypingUsers((users: any) => users.filter((u: any) => u.userId !== user.id));
+        // Handle user leaving the room
+        const handleUserLeaveRoom = (user: User) => {
+            setTypingUsers((users) => users.filter((u) => u.userId !== user.id));
+            setRoomId(null);
+            setJoinedMeeting(false);
+            setRoomTalkingInJitsi(null);
+            setRoomConnectedSocket(false);
         };
 
+        // Handle receiving a new message
         const handleSendMessageEvent = (message: IGetMessagesResponse) => {
             setLastMessage(message);
         };
 
+        // Handle start typing event
         const handleStartTypingEvent = (userTypingData: TypingInfo) => {
             if (userTypingData.senderId !== socket.id) {
-                setTypingUsers((users: any) => [...users, { userId: userTypingData.userId, avatarUrl: userTypingData.avatarUrl, senderId: userTypingData.senderId, isTyping: true }]);
+                setTypingUsers((users) => [...users, { userId: userTypingData.userId, avatarUrl: userTypingData.avatarUrl, senderId: userTypingData.senderId, isTyping: true }]);
             }
         };
 
+        // Handle stop typing event
         const handleStopTypingEvent = (userTypingData: TypingInfo) => {
-            setTypingUsers((users: any) => users.filter((user: any) => user.userId !== userTypingData.userId));
+            setTypingUsers((users) => users.filter((user) => user.userId !== userTypingData.userId));
         };
 
-        const handleStartCallEvent = (data: any) => {
-            console.log('on start call event ... ',  data);
+        // Handle start call event
+        const handleStartCallEvent = (data: VideoStartResponse) => {
+            console.log('on start call event ... ');
             setRoomTalkingInJitsi(data);
-            setRoomId(data.roomId);
+            setJoinedMeeting(true);
         };
 
-        const handleJoinCallEvent = (data: { roomId: string }) => {
-            setRoomId(data.roomId);
-            setJoinedRoom(true);
+        // Handle join call event
+        const handleJoinCallEvent = () => {
+            // join room success -> set state
+            setRoomConnectedSocket(true);
+            setJoinedMeeting(true);
         };
 
+        // Handle leave call event
         const handleLeaveCallEvent = (data: { roomId: string }) => {
             if (data.roomId === roomId) {
-                setRoomId(null);
-                setJoinedRoom(false);
+                setJoinedMeeting(false);
+            }
+        };
+
+        // Handle reject call event
+        const handleRejectCallEvent = (data: { roomId: string }) => {
+            if (data.roomId === roomId) {
+                setJoinedMeeting(false);
                 setRoomTalkingInJitsi(null);
             }
         };
 
-        const handleRejectCallEvent = (data: { roomId: string }) => {
-            if (data.roomId === roomId) {
-                setRoomId(null);
-            }
-        };
-
-        socket.on('USER_LEAVE_CHAT_EVENT', handleUserLeaveChat);
+        socket.on('USER_LEAVE_CHAT_EVENT', handleUserLeaveRoom);
         socket.on('SEND_MESSAGE_EVENT', handleSendMessageEvent);
         socket.on('START_TYPING_MESSAGE_EVENT', handleStartTypingEvent);
         socket.on('STOP_TYPING_MESSAGE_EVENT', handleStopTypingEvent);
@@ -192,7 +231,7 @@ const useChat = () => {
 
         // Cleanup on component unmount
         return () => {
-            socket.off('USER_LEAVE_CHAT_EVENT', handleUserLeaveChat);
+            socket.off('USER_LEAVE_CHAT_EVENT', handleUserLeaveRoom);
             socket.off('SEND_MESSAGE_EVENT', handleSendMessageEvent);
             socket.off('START_TYPING_MESSAGE_EVENT', handleStartTypingEvent);
             socket.off('STOP_TYPING_MESSAGE_EVENT', handleStopTypingEvent);
@@ -209,7 +248,7 @@ const useChat = () => {
         if (newRoomId !== roomId) {
             console.log('set new room: ', newRoomId);
             setRoomId(newRoomId);
-            setJoinedRoom(false);
+            setJoinedMeeting(false);
         }
     }, [roomId]);
 
@@ -224,7 +263,7 @@ const useChat = () => {
         leaveRoom,
         changeRoom,
         roomTalkingInJitsi,
-        joinedRoom,
+        joinedMeeting,
         setRoomTalkingInJitsi,
         startCall,
         joinCall,

@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import useChat  from '@/services/socket/useChat';
+import { useEffect, useMemo, useCallback } from 'react';
+import useChat from '@/services/socket/useChat';
 import { AvatarGroupWrap, AvatarWrap } from '@/components/commons';
 import { SeenIcon, SentIcon } from '@/components/icons';
 import { useAuth } from '@/providers/auth';
@@ -8,7 +8,6 @@ import { getImage, getUserById, trunMessage } from '@/utils/helpers';
 import { EllipsisOutlined } from '@ant-design/icons';
 import { Badge } from 'antd';
 import clsx from 'clsx';
-import { useMemo, useCallback } from 'react';
 import './style.scss';
 import { IRoomDetail } from '@/interface/common/index';
 import { formatDateTime } from '@/utils/helpers/index';
@@ -34,12 +33,20 @@ export const RoomItem: React.FC<IProps> = ({ room }) => {
 
     const { currentUser } = useAuth();
     const { joinRoom, changeRoom } = useChat();
-
     const router = useRouter();
+
+    useEffect(() => {
+        if (room.id) {
+            joinRoom(room.id as string);
+            changeRoom(room.id as string);
+        }
+    }, [room.id, joinRoom, changeRoom]);
+
     const me = useMemo(() => participants?.find((user: any) => user._id === currentUser?._id), [
         participants,
         currentUser?._id,
     ]);
+
     const countUnreadMessage = useMemo(() => totalMessage - Number(me?.indexMessageRead || 0), [
         totalMessage,
         me?.indexMessageRead,
@@ -50,21 +57,7 @@ export const RoomItem: React.FC<IProps> = ({ room }) => {
         currentUser?._id,
     ]);
 
-    /**
-     * Read message unread
-     */
     const readMessageUnread = () => {
-        if (room.id) {
-            try {
-                changeRoom(room.id as string);
-                joinRoom(room.id as string);   
-            } catch (error) {
-                console.log(error)
-            }
-        }
-        if (countUnreadMessage > 0) {
-            // Xử lý khi có tin nhắn chưa đọc
-        }
         router.push(APP_ROUTER.MESSAGE.CHAT_DETAIL.replace(':id', room?.id));
     };
 

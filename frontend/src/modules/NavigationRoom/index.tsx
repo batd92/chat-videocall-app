@@ -33,13 +33,13 @@ export const NavigationRoom = () => {
         [ENDPOINT.ROOM.GET_ROOMS, params?.keyword],
         () => RoomService.getRooms(params),
         {
-        onSuccess: (response: any) => {
-            setRooms([...rooms, ...response?.rooms])
-            setParams({
-            ...params,
-            lastRecord: JSON.stringify(response?.lastRecord || ''),
-            })
-        },
+            onSuccess: (response: any) => {
+                setRooms([...rooms, ...response?.rooms])
+                setParams({
+                    ...params,
+                    lastRecord: JSON.stringify(response?.lastRecord || ''),
+                });
+            },
         },
     )
 

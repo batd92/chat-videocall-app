@@ -28,14 +28,6 @@ class Room {
     getRoomDetail = async (id: string): Promise<IResponse<IGetRoomResponse>> => {
         return http.get(ENDPOINT.ROOM.GET_ROOM_DETAIL.replace(':id', id))
     }
-
-    testCall = async (id: string): Promise<IResponse<{ token: string, roomName: string }>> => {
-        return http.get(ENDPOINT.ROOM.TEST_CALL, {
-            params: {
-                id: JSON.stringify(id),
-            }
-        })
-    }
       
     updateRoomName = async (id: string, body: { name: string , userIds?: string[]}): Promise<any> => {
         const res: any = await http.put(ENDPOINT.ROOM.UPDATE_ROOM_NAME.replace(':id', id), body)

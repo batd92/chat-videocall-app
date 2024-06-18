@@ -1,81 +1,75 @@
-import { IGetRoomResponse } from '@/interface/response/room'
-import { Avatar, Modal, Row } from 'antd'
-import React from 'react'
-import './style.scss'
+import React from 'react';
+import { Avatar, Modal, Row, Button } from 'antd';
+import './style.scss';
+import { IGetRoomResponse } from '@/interface/response/room/index';
 
 interface IModalWrap {
-    conversation: IGetRoomResponse
+    room: IGetRoomResponse | {};
     isOpen: boolean
     onCancel: () => void
-    onOkay: () => void
+    onOk: () => void
 }
-const IncomingCall: React.FC<IModalWrap> = ({
-    conversation,
-    isOpen = false,
-    onCancel,
-    onOkay,
-}) => {
-    const userId = 1
 
-    const participantFirst = conversation?.participants?.filter(
-        (e) => e._id !== String(userId),
-    )[0]
+const IncomingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel, onOk }) => {
+    const userId = 1; // Example userId, replace with your actual logic
+    const participants = room?.participants ? Array.from(new Set(room.participants)) : [];
+    const participantFirst = participants.find((e: any) => e.userId !== String(userId));
 
-    const renderFooter = () => (
-        <div className='incoming-call-card-footer'>
-            <Modal
-                onCancel={onCancel}
-                closeIcon={null}
-                footer={null}
-                open={isOpen}
-            >
-                <Row className='incoming-call-card' justify='center'>
-                    <div>
-                        {conversation && (
-                            <>
-                                {conversation.isGroup ? (
-                                    <div className='group'>
-                                        <h1 className='name'>
-                                            <strong>{conversation.name}</strong>
-                                        </h1>
-                                        {conversation.participants.map((participant: any, index: number) => (
-                                            <Avatar
-                                                className='avatar'
-                                                key={participant._id || index}
-                                                src={participant.avatarUrl}
-                                                alt='description of image'
-                                            />
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className='not-group'>
-                                        <h1 className='name'>
-                                            <strong>Quy NT</strong>
-                                        </h1>
-                                        <Avatar
-                                            className='avatar'
-                                            src={participantFirst?.avatarUrl}
-                                            alt='description of image'
-                                        />
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
-                </Row>
-            </Modal>
-        </div>
-    )
+    const randomChar = () => (Math.random() + 1).toString(36).substring(10);
 
     return (
         <Modal
+            visible={isOpen} // Corrected prop name to visible
             onCancel={onCancel}
-            closeIcon={null}
-            footer={renderFooter()}
-            open={isOpen}
+            footer={null}
             className='incoming-call-modal'
-        />
-    )
-}
+            centered
+            closable={false}
+        >
+            <Row className='incoming-call-card' justify='center'>
+                <div>
+                    {room && (
+                        <>
+                            {room.isGroup ? (
+                                <div className='group'>
+                                    <p>Incoming call from: </p>
+                                    <h1 className='name'>
+                                        <strong>{room.name}</strong>
+                                    </h1>
+                                    <div className='avatar-group'>
+                                        {participants.map((participant: any) => (
+                                            <Avatar
+                                                className='avatar'
+                                                key={participant._id + randomChar()}
+                                                src={participant.avatarUrl}
+                                                alt='Participant avatar'
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className='not-group'>
+                                    <h1 className='name'>
+                                        <strong>{participantFirst?.username}</strong>
+                                    </h1>
+                                    <Avatar
+                                        key={randomChar()}
+                                        className='avatar'
+                                        src={participantFirst?.avatarUrl}
+                                        alt='Participant avatar'
+                                    />
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+                <div className='incoming-call-card-footer'>
+                    <Button className='reject-button' onClick={onCancel}>Reject</Button>
+                    <Button className='accept-button' type='primary' onClick={onOk}>Accept</Button>
+                </div>
+            </Row>
+        </Modal>
+    );
+};
 
-export default IncomingCall
+export default IncomingCall;

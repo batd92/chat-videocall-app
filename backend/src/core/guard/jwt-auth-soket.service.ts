@@ -22,7 +22,6 @@ export class JwtAuthSocketGuardService extends AuthGuard('jwt') implements CanAc
         const authToken = socket.handshake.query.token || socket.handshake.headers?.authorization?.split(' ')[1];
 
         const jwtPayload: JwtPayload = jwt.verify(authToken, this.config.secretKey) as JwtPayload;
-        console.log('jwtPayload', jwtPayload);
         const user: UserPrincipal = this.jwtStrategy.validate(jwtPayload);
         if (!user) {
             throw new UnauthorizedException('Invalid token');

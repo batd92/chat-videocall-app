@@ -1,51 +1,62 @@
 import { ISocket, IUserameSocket, IRoomState, IUserSocket } from "./interface/socket";
 import { Socket } from "socket.io";
-import { VideoCallRequest } from "gateway/video-call/dto/video-call.request.dto";
+import { VideoCallRequest } from "../../gateway/video-call/dto/video-call.request.dto";
+import { IParticipant } from "../../modules/participant/interface/interface-participant";
 
 export class SocketStateService {
-    // trạng thái socket by roomId
-    private roomUsernameSockets = new Map<string, Array<IUserameSocket>>();
-
-    // trạng thái socket by userId
-    private socketIdsState = new Map<string, Array<string>>();
-
-    // trang thái socket theo id
+    private socketsByRoomId = new Map<string, Array<IUserameSocket>>();
+    private socketsByUserId = new Map<string, Array<string>>();
     private socketState = new Map<string, ISocket>();
-
-    // trạng thái của room
     private socketRoomState = new Map<string, string>();
+    private roomStatesById = new Map<string, IRoomState>();
 
-    private roomStates = new Map<string, IRoomState>();
-
+    /**
+     * Connect socket
+     * @param userId 
+     * @param socket 
+     * @returns 
+     */
     public addSocket(userId: string, socket: ISocket): boolean {
-        const sockets = this.socketIdsState.get(userId) || [];
-        const existingSocket = sockets.find(id => id === socket.id);
+        const socketByUser = this.socketsByUserId.get(userId) || [];
+        const existingSocket = socketByUser.find(id => id === socket.id);
         if (existingSocket) return false;
-        this.socketIdsState.set(userId, [...sockets, socket.id]);
+        this.socketsByUserId.set(userId, [...socketByUser, socket.id]);
     }
 
-    public addUserJoinRoom(roomId: string, userId: string, socket: Socket): boolean {
-        const roomUsernameSockets = this.roomUsernameSockets.get(roomId) || [];
+    /**
+     * User join room
+     * @param roomId 
+     * @param userId 
+     * @param socket 
+     * @param participants 
+     * @returns 
+     */
+    public addUserJoinRoom(roomId: string, userId: string, socket: Socket, participants: IParticipant[]): boolean {
+        const roomUsernameSockets = this.socketsByRoomId.get(roomId) || [];
         const existingUsernameRecord = roomUsernameSockets.find(us => us.userId === userId && us.socketId === socket.id);
         if (existingUsernameRecord) return false;
 
-        this.roomUsernameSockets.set(roomId, [...roomUsernameSockets, { username: '', socketId: socket.id, userId }]);
+        this.socketsByRoomId.set(roomId, [...roomUsernameSockets, { username: '', socketId: socket.id, userId }]);
         this.socketState.set(socket.id, socket);
         this.socketRoomState.set(socket.id, roomId);
-        console.log('Room: ', this.roomUsernameSockets.get(roomId));
-        this.getRoomState(roomId);
+        console.log('Room: ', this.socketsByRoomId.get(roomId));
+        this.getRoomState(roomId, participants);
     }
 
+    /**
+     * Disconnect or user leave room
+     * @param socket 
+     */
     public removeSocket(socket: ISocket) {
         const roomId = this.socketRoomState.get(socket.id);
         if (roomId) {
-            const usernameSockets = this.roomUsernameSockets.get(roomId) || [];
+            const usernameSockets = this.socketsByRoomId.get(roomId) || [];
             const socketIds = usernameSockets.map(us => us.socketId);
 
             if (socketIds.length > 1) {
-                this.roomUsernameSockets.set(roomId, usernameSockets.filter(rus => rus.socketId !== socket.id));
+                this.socketsByRoomId.set(roomId, usernameSockets.filter(rus => rus.socketId !== socket.id));
             } else {
-                this.roomUsernameSockets.delete(roomId);
+                this.socketsByRoomId.delete(roomId);
             }
         }
         this.socketState.delete(socket.id);
@@ -53,18 +64,18 @@ export class SocketStateService {
     }
 
     public getAllSocketForRoomExcludingUsername(roomId: string, username: string): Array<ISocket> {
-        const usernameSockets = this.roomUsernameSockets.get(roomId) || [];
+        const usernameSockets = this.socketsByRoomId.get(roomId) || [];
         return usernameSockets.filter(us => us.username !== username).map(us => this.socketState.get(us.socketId))
     }
 
     public getAllSocketForRoom(roomId: string): Array<IUserameSocket> {
-        console.log('getAllSocketForRoom ', this.roomUsernameSockets.get(roomId))
-
-        return this.roomUsernameSockets.get(roomId) || [];
+        console.log('getAllSocketForRoom ', this.socketsByRoomId.get(roomId), roomId);
+        const socketByRoom = this.socketsByRoomId.get(roomId);
+        return socketByRoom;
     }
 
-    public getRoomState(roomId: string): IRoomState {
-        const room = this.roomStates.get(roomId);
+    public getRoomState(roomId: string, participants: IParticipant[]): IRoomState {
+        const room = this.roomStatesById.get(roomId);
         if (room) return room;
 
         const roomState = {
@@ -77,13 +88,14 @@ export class SocketStateService {
             inRoom: [],
             owner: '',
             ownerVideoCall: '',
+            participants
         }
-        this.roomStates.set(roomId, roomState);
+        this.roomStatesById.set(roomId, roomState);
         return roomState;
     }
 
     public updateRoomState(payload: VideoCallRequest, socket: Socket, jitsiToken: string, jitsiName: string): void {
-        const room = this.roomStates.get(payload.roomId);
+        const room = this.roomStatesById.get(payload.roomId);
         room.jitsiToken = jitsiToken;
         room.jitsiName = jitsiName;
         room.ownerVideoCall = payload.userId;
@@ -92,11 +104,11 @@ export class SocketStateService {
             userId: payload.userId,
             socketId: socket.id
         });
-        this.roomStates.set(payload.roomId, room);
+        this.roomStatesById.set(payload.roomId, room);
     }
 
     public updateRoomUserJoin(payload: VideoCallRequest, socket: Socket): void {
-        const room = this.roomStates.get(payload.roomId);
+        const room = this.roomStatesById.get(payload.roomId);
         room.userJoined.push({
             userId: payload.userId,
             socketId: socket.id
@@ -106,11 +118,11 @@ export class SocketStateService {
             userId: payload.userId,
             socketId: socket.id
         });
-        this.roomStates.set(payload.roomId, room);
+        this.roomStatesById.set(payload.roomId, room);
     }
 
     public updateRoomUserLeave(payload: VideoCallRequest, socket: Socket): IRoomState | undefined {
-        const room = this.roomStates.get(payload.roomId);
+        const room = this.roomStatesById.get(payload.roomId);
         if (room) {
             room.userJoined = [...(room.userJoined.filter(us => us.userId != payload.userId))];
 
@@ -121,13 +133,13 @@ export class SocketStateService {
                 room.userRejecteds.length = 0;
                 room.inRoom.length = 0;
             }
-            this.roomStates.set(payload.roomId, room);
+            this.roomStatesById.set(payload.roomId, room);
             return room;
         }
     }
 
     public resetRoomUserLeave(payload: VideoCallRequest, socket: Socket): IRoomState | undefined {
-        const room = this.roomStates.get(payload.roomId);
+        const room = this.roomStatesById.get(payload.roomId);
         if (room) {
             if (room.ownerVideoCall === payload.userId) {
                 if (room.userJoined.length <= 1) {
@@ -140,7 +152,7 @@ export class SocketStateService {
                 }
             }
             room.userJoined = [...(room.userJoined.filter(us => us.userId != payload.userId))];
-            this.roomStates.set(payload.roomId, room);
+            this.roomStatesById.set(payload.roomId, room);
             return room;
         }
     }

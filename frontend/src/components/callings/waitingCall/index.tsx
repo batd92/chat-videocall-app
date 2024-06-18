@@ -4,7 +4,7 @@ import './style.scss';
 import { IGetRoomResponse } from '@/interface/response/room';
 
 interface IModalWrap {
-    room: IGetRoomResponse;
+    room: IGetRoomResponse | {};
     isOpen: boolean;
     onCancel: () => void;
 }
@@ -12,7 +12,7 @@ interface IModalWrap {
 const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
     const userId = 1;
     const randomChar = () => (Math.random() + 1).toString(36).substring(10);
-    const participants = room.participants ? Array.from(new Set(room.participants)) : [];
+    const participants = room?.participants ? Array.from(new Set(room.participants)) : [];
     const participantFirst: any = participants.find((e: any) => e._id !== String(userId));
 
     const renderFooter = () => (
@@ -40,6 +40,7 @@ const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
                 <div>
                     {room?.isGroup ? (
                         <div className='group'>
+                            <p>Waiting user join from: </p>
                             <h1 className='name'>
                                 <strong>{room.name}</strong>
                             </h1>

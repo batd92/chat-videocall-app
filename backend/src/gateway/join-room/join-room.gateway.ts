@@ -49,9 +49,9 @@ export class JoinRoomGateway {
     ): Observable<WsResponse<BaseRequest>> {
         console.log('payload', payload)
         return this.roomService.getParticipantsByRoom(payload.roomId).pipe(
-            mergeMap((room) => {
+            mergeMap((room: IRoom) => {
                 this.checkRoom(room, payload.userId);
-                this.socketStateService.addUserJoinRoom(payload.roomId, payload.userId, socket);
+                this.socketStateService.addUserJoinRoom(payload.roomId, payload.userId, socket, room.participants);
                 return from([{ event: 'joinRoom', data: payload, userId: payload.userId, roomId: payload.roomId }]);
             }),
             catchError((error) => {

@@ -23,7 +23,7 @@ export const UploadWrap = ({
     accept,
     className,
     beforeUpload,
-    uploadBtnText = 'Tải lên',
+    uploadBtnText = 'Upload',
     ...props
 }: any) => {
     const [fileList, setFileList] = useState<any>([])

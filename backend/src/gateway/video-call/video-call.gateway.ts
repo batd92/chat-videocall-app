@@ -62,12 +62,18 @@ export class VideoCallGateway {
             mergeMap(async (room) => {
                 this.checkRoom(room, payload.userId);
                 const roomDB = this.socketStateService.getRoomState(payload.roomId);
+                console.log('roomDB', roomDB);
                 if (roomDB.jitsiToken) {
                     throw new BadGatewayException(`Room started with room call.`);
                 }
                 // get Jitsi Token
                 const jitsiToken = await this.jitsiorgService.getInfoJitsi(payload);
-                return { event: START_CALL_EVENT, data: Object.assign(payload, { ownerId: payload.userId, jitsiToken: jitsiToken.token, roomId: payload.roomId, roomName: jitsiToken.roomName }) };
+                return { 
+                    event: START_CALL_EVENT, 
+                    data: Object.assign(payload, { ownerId: payload.userId, jitsiToken: jitsiToken.token, roomId: payload.roomId, roomName: jitsiToken.roomName }),
+                    roomId: payload.roomId,
+                    userId: payload.userId
+                };
             }),
             catchError((error) => {
                 socket.emit('error', error.message);

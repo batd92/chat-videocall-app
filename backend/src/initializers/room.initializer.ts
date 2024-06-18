@@ -41,8 +41,8 @@ export class RoomDataInitializerService implements OnModuleInit {
         //     user: randomUser1._id,
         //     room: room1._id,
         //     indexMessageRead: 0,
-        //     userId: randomUser1._id, // Thêm userId vào đây
-        //     roomId: room1._id // Thêm roomId vào đây
+        //     userId: randomUser1._id,
+        //     roomId: room1._id
         // });
     
         // const randomUser2 = users[Math.floor(Math.random() * users.length)];
@@ -58,8 +58,8 @@ export class RoomDataInitializerService implements OnModuleInit {
         // // Create Participant for owner
         // await this.participantModel.create({
         //     indexMessageRead: 0,
-        //     userId: randomUser2._id, // Thêm userId vào đây
-        //     roomId: room2._id // Thêm roomId vào đây
+        //     userId: randomUser2._id,
+        //     roomId: room2._id
         // });
     
         // console.log('Created rooms:', room1, room2);

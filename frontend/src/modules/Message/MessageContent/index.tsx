@@ -26,6 +26,7 @@ import SidebarMenu from '@/modules/SidebarMenu/index'
 import { ChatIcon } from '@/components/icons/ChatIcon/index'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import useChat from '@/services/socket/useChat'
+import IncomingCall from '@/components/callings/incomingCall/index'
 interface IProps {
   roomId: string
 }
@@ -34,17 +35,21 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     const { currentUser } = useAuth()
     const messagesEndRef = useRef<any>(null)
     const [isOpen, setIsOpen] = useState<boolean>(false)
-    const [replyingTo, setReplyingTo] = useState<IMessage | null>(null)
-    const [officialMessages, setOfficialMessages] = useState<IMessage[]>([])
-    const [isStartCall, setIsStartCall] = useState<boolean>(false)
+    const [replyingTo, setReplyingTo] = useState<IGetMessagesRequest | null>(null)
+    const [officialMessages, setOfficialMessages] = useState<IGetMessagesResponse[]>([])
     const [isOpenMeeting, setIsOpenMeeting] = useState<boolean>(false)
+    const [isOpenIncomingCall, setIsOpenIncomingCall] = useState<boolean>(false);
+    const [isOpenWaitingVideoCall, setIsOpenWaitingVideoCall] = useState<boolean>(false);
+
     const {
         lastMessage,
         typingUsers,
         startCall,
         roomTalkingInJitsi,
         setRoomTalkingInJitsi,
-        rejectCall
+        rejectCall,
+        joinCall,
+        joinedMeeting,
     } = useChat();
 
     // current room selected
@@ -54,6 +59,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
     const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null)
     const [searchMsgId, setSearchMsgId] = useState<string | null>(null)
     const [activeMessage, setActiveMessage] = useState<string>('')
+
     const [params, setParams] = useState<IGetMessagesRequest>({
         limit: 20,
         lastRecord: '',
@@ -128,6 +134,11 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
         },
     )
 
+    /**
+     * Search
+     * @param e 
+     * @returns 
+     */
     const onRedirectSearch = (e: any) => {
         setActiveMessage(e._id)
         setSearchMsgId(e?._id || null)
@@ -152,7 +163,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
      * monitoring last message
      */
     useEffect(() => {
-        console.log('monitoring last message', lastMessage, typingUsers);
+        console.log('monitoring last message', lastMessage);
         if (lastMessage) {
             if (lastMessage.roomId === roomId) {
                 setOfficialMessages((prevMessages: any) => uniqBy([lastMessage, ...prevMessages], '_id'));
@@ -168,43 +179,85 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
                 }, 100);
             }
         }
+
     }, [lastMessage]);
     
+
+    /**
+    * monitoring call
+    */
+     useEffect(() => {
+        if (roomTalkingInJitsi) {
+            console.log('monitoring call ....');
+            if (currentUser?._id === roomTalkingInJitsi.ownerId) {
+                setIsOpenWaitingVideoCall(true);
+                setIsOpenIncomingCall(false);
+
+            } else {
+                setIsOpenIncomingCall(true);
+                setIsOpenWaitingVideoCall(false);
+            }
+        }
+      }, [roomTalkingInJitsi, currentUser]);
 
     /**
      * start call
      * @param roomId 
      */
     const onStartCall = (roomId: string) => {
-        setIsStartCall(true);
-        setIsOpenMeeting(true);
-        startCall(roomId);
-        const timerIdCancel = setTimeout(() => {
-            onCancelCall(roomId)
-        }, TIMEOUT_CALL)
-    
-        setTimerId(timerIdCancel)
+        startCall(roomId);    
+        setTimerId(setTimeout(() => { onEndCall(roomId) }, TIMEOUT_CALL));
+        setIsOpenWaitingVideoCall(true);
     }
 
     /**
      * end call
      */
     const onEndCall = (roomId: string) => {
-        setIsStartCall(false);
+        setIsOpenWaitingVideoCall(false);
+        setIsOpenIncomingCall(false);
         setIsOpenMeeting(false);
         setRoomTalkingInJitsi(null);
         rejectCall(roomId);
+        clearTimeout(timerId as unknown as number);
     }
 
     /**
      * cancel call
      * @param roomId 
      */
-    const onCancelCall = (roomId: string) => {
-        setIsStartCall(false)
+    const onLeaveCall = (roomId: string) => {
+        setIsOpenIncomingCall(false);
+        setIsOpenWaitingVideoCall(false);
         // TODO:
         // send event cancel call to socket
-        clearTimeout(timerId as unknown as number)
+        clearTimeout(timerId as unknown as number);
+    }
+
+    /**
+     * handle cancel in comming
+     * @param roomId 
+     */
+    const onCancelIncomingCall = (roomId: string) => {
+        if (roomTalkingInJitsi) {
+            rejectCall(roomId);
+            setIsOpenIncomingCall(false);
+            setIsOpenMeeting(false);
+            setIsOpenWaitingVideoCall(false);
+            setRoomTalkingInJitsi(null);
+        }
+        clearTimeout(timerId as unknown as number);
+    }
+
+    /**
+     * handle accept in comming
+     * @param id 
+     */
+    const onOkayIncomingCall = (roomId: string) => {
+        setIsOpenIncomingCall(false);
+        setIsOpenMeeting(true);
+        joinCall(roomId);
+        clearTimeout(timerId as unknown as number);
     }
 
     /**
@@ -241,7 +294,7 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
         const today = new Date().toDateString();
     
         // Ensure `officialMessages` is an array of IMessage
-        const groupDateObject = officialMessages.reduce<Record<string, { date: string; messages: IMessage[] }>>((acc, message) => {
+        const groupDateObject = officialMessages.reduce<Record<string, { date: string; messages: IGetMessagesResponse[] }>>((acc, message) => {
             const messageDate = new Date(message.createdAt).toDateString();
             if (!acc[messageDate]) {
                 acc[messageDate] = { date: messageDate, messages: [] };
@@ -294,23 +347,34 @@ export const MessageContent: React.FC<IProps> = ({ roomId }) => {
         if (roomId) {
             return (
                 <>
-                {roomCurrentSelected && (
+                {
+                    /**
+                     * call detail
+                     */
+                }
+                {isOpenWaitingVideoCall && (
                     <WaitingCall
                         room={roomCurrentSelected}
-                        isOpen={isStartCall}
-                        onCancel={() => onCancelCall(roomId)}
-                    ></WaitingCall>
+                        isOpen={isOpenWaitingVideoCall}
+                        onCancel={() => onEndCall(roomId) }
+                    />
                 )}
-
-                {roomTalkingInJitsi && (
+                {isOpenIncomingCall && (
+                    <IncomingCall
+                        room={roomCurrentSelected || {}}
+                        isOpen={isOpenIncomingCall}
+                        onCancel={() => onCancelIncomingCall(roomId) }
+                        onOk={() => onOkayIncomingCall (roomId)}
+                    />
+                )}
+                {isOpenMeeting && roomTalkingInJitsi && (
                     <JitsiMeetingCall
                         roomNameJitsi={roomTalkingInJitsi.roomName}
                         tokenJitsi={roomTalkingInJitsi.jitsiToken}
-                        onCancel={() => onEndCall(roomTalkingInJitsi.roomId)}
+                        onCancel={() => onLeaveCall(roomTalkingInJitsi.roomId)}
                         isOpen={isOpenMeeting}
                     />
                 )}
-                
                 {
                     /**
                      * header of chat detail

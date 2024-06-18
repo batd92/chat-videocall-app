@@ -1,3 +1,5 @@
+import { IParticipant } from "modules/participant/interface/interface-participant"
+
 export interface ISocket {
     id: string
 }
@@ -21,5 +23,6 @@ export interface IRoomState {
     hostId: string,
     userRejecteds: Array<IUserSocket>,
     inRoom: Array<IUserSocket>
+    participants: Array<IParticipant>
 }
 

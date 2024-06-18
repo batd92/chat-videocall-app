@@ -17,7 +17,7 @@ const JitsiMeetingCall: React.FC<IModalWrap> = ({
     isOpen = false,
     onCancel,
 }) => {
-
+    
     return (
         <>
             <Modal

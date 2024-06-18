@@ -94,7 +94,7 @@ export const MessageText = ({ message, isLastMsg, isMe }: IProps) => {
                             </div>
                             <div className='right'>
                                 <span className='call-type'>Voice Call</span>
-                                <span className='call-total'>43 giây</span>
+                                <span className='call-total'>43s</span>
                             </div>
                         </div>
                     );
