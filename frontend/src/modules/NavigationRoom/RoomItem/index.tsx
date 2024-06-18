@@ -54,7 +54,6 @@ export const RoomItem: React.FC<IProps> = ({ room }) => {
      * Read message unread
      */
     const readMessageUnread = () => {
-        alert('move chat detail');
         if (room.id) {
             try {
                 changeRoom(room.id as string);

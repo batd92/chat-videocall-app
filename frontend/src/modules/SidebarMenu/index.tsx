@@ -86,13 +86,17 @@ const SidebarMenu: React.FC<IProps> = ({
         }
     )
 
+    const handleMediaClick = useCallback((key: TypeFileStorage) => {
+        setMediaActivedKey(key);
+    }, []);
+
     const collapseItems: CollapseProps['items'] = useMemo(() => {
         if (!roomDetail?._id) return []
         const collapseItems: CollapseProps['items'] = [
             {
                 key: '3',
                 label: 'Media files, files and links',
-                children: <MediaButtons onMediaClick={setMediaActivedKey} />,
+                children: <MediaButtons onMediaClick={handleMediaClick} />,
             }
         ]
         if (roomDetail?.isGroup) {
@@ -114,8 +118,7 @@ const SidebarMenu: React.FC<IProps> = ({
                     key: '2',
                     label: 'Member in the chat',
                     children: <MemberList participants={roomDetail.participants} onAddMemberClick={handleAddmembers} />,
-                },
-                
+                }
             )
         }
         collapseItems.push(
@@ -133,7 +136,7 @@ const SidebarMenu: React.FC<IProps> = ({
             }
         )
         return collapseItems
-    }, [roomDetail, setRoomCurrentSelected, handleUpdateName, handleAddmembers])
+    }, [roomDetail, handleUpdateName, handleAddmembers, handleMediaClick])
 
     const handleOkNewRoomModal = useCallback(() => {
         setIsOpenModel(false)
@@ -181,7 +184,7 @@ const SidebarMenu: React.FC<IProps> = ({
                     }
                 </>
             ) : (
-                <MediaContainer mediaKey={mediaActivedKey} onBack={() => setMediaActivedKey(null)} list={[]} />
+                <MediaContainer mediaKey={mediaActivedKey} onBack={() => setMediaActivedKey(null)} roomId={roomDetail._id} />
             )}
         </Drawer>
     )

@@ -1,80 +1,94 @@
-import React from 'react'
-import { Button } from 'antd'
-import { TypeFileStorage } from '@/interface/response'
-import { PictureOutlined, FileTextOutlined, LinkOutlined, VideoCameraOutlined, FilePdfOutlined } from '@ant-design/icons'
+import React, { useEffect, useState } from 'react';
+import { Button } from 'antd';
+import { TypeFileStorage, IFileStorage } from '@/interface/response';
+import { PictureOutlined, FileTextOutlined, LinkOutlined, VideoCameraOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { useQuery } from 'react-query';
+import { ENDPOINT } from '@/services/endpoint';
+import { MessageService } from '@/services/message';
+import './style.scss';
+import { IFileContent, IGetMessagesResponse } from '@/interface/response/message/index';
 
 interface MediaContainerProps {
-    mediaKey: TypeFileStorage
-    list: { type: string; url: string; name: string }[]
-    onBack: () => void
+    mediaKey: TypeFileStorage;
+    roomId: string;
+    onBack: () => void;
 }
 
-const MediaContainer: React.FC<MediaContainerProps> = ({ mediaKey, list, onBack }) => {
-    const renderMediaContent = () => {
-        switch (mediaKey) {
-            case TypeFileStorage.IMAGE:
-                return list.filter(item => item.type === TypeFileStorage.IMAGE).map((item, index) => (
-                    <div key={index}>
-                        <img src={item.url} alt={item.name} style={{ width: '100%' }} />
-                    </div>
-                ))
-            case TypeFileStorage.VIDEO:
-                return list.filter(item => item.type === TypeFileStorage.VIDEO).map((item, index) => (
-                    <div key={index}>
-                        <video controls src={item.url} style={{ width: '100%' }} />
-                    </div>
-                ))
-            case TypeFileStorage.PDF:
-                return list.filter(item => item.type === TypeFileStorage.PDF).map((item, index) => (
-                    <div key={index}>
-                        <a href={item.url} target="_blank" rel="noopener noreferrer">{item.name}</a>
-                    </div>
-                ))
-            case TypeFileStorage.DOC:
-                return list.filter(item => item.type === TypeFileStorage.DOC).map((item, index) => (
-                    <div key={index}>
-                        <a href={item.url} target="_blank" rel="noopener noreferrer">{item.name}</a>
-                    </div>
-                ))
-            case TypeFileStorage.LINK:
-                return list.filter(item => item.type === TypeFileStorage.LINK).map((item, index) => (
-                    <div key={index}>
-                        <a href={item.url} target="_blank" rel="noopener noreferrer">{item.name}</a>
-                    </div>
-                ))
-            default:
-                return null
+const MediaContainer: React.FC<MediaContainerProps> = ({ mediaKey, roomId, onBack }) => {
+    const [mediaList, setMediaList] = useState<IGetMessagesResponse[]>([]);
+
+    const { refetch: mediaInRoom } = useQuery(
+        [ENDPOINT.MESSAGE.GET_MEDIA, roomId, mediaKey],
+        () => MessageService.getMedia(roomId, mediaKey),
+        {
+            enabled: !!roomId && !!mediaKey,
+            onSuccess: (response: any) => {
+                setMediaList(response.data || []);
+            },
+        },
+    );
+
+    useEffect(() => {
+        if (roomId && mediaKey) {
+            mediaInRoom();
         }
-    }
+    }, [roomId, mediaKey, mediaInRoom]);
+
+    const renderMediaContent = () => {
+        return mediaList.map((item, index) => {
+            if (item.type.toString() === "File") {
+                return (
+                    ((item.content) as IFileContent[]).map((file, i) => (
+                        <div key={`${index}-${i}`} className='media-item'>
+                            {mediaKey === TypeFileStorage.IMAGE && <img src={file.url} alt={file.file_name} style={{ width: '100%' }} />}
+                            {mediaKey === TypeFileStorage.DOC && <a href={file.url} target="_blank" rel="noopener noreferrer">{file.file_name}</a>}
+                        </div>
+                    ))
+                );
+            }
+            if (item.type === "Link") {
+                return (
+                    (item.content as IFileContent[]).map((file, i) => (
+                        <div key={`${index}-${i}`} className='media-item'>
+                            {mediaKey === TypeFileStorage.LINK && <a href={file.url} target="_blank" rel="noopener noreferrer">{'This a link'}</a>}
+                        </div>
+                    ))
+                );
+            }
+            return null;
+        });
+    };
 
     const renderIcon = () => {
         switch (mediaKey) {
             case TypeFileStorage.IMAGE:
-                return <PictureOutlined />
+                return <PictureOutlined />;
             case TypeFileStorage.VIDEO:
-                return <VideoCameraOutlined />
+                return <VideoCameraOutlined />;
             case TypeFileStorage.PDF:
-                return <FilePdfOutlined />
+                return <FilePdfOutlined />;
             case TypeFileStorage.DOC:
-                return <FileTextOutlined />
+                return <FileTextOutlined />;
             case TypeFileStorage.LINK:
-                return <LinkOutlined />
+                return <LinkOutlined />;
             default:
-                return null
+                return null;
         }
-    }
+    };
 
     return (
         <div className='media-container'>
-            <Button onClick={onBack}>Back</Button>
-            <h2>
-                <br></br>
-                {renderIcon()} {mediaKey}</h2>
+            <div className='media-header'>
+                <div className='header-content'>
+                    {renderIcon()} {mediaKey}
+                </div>
+                <Button onClick={onBack} className='back-button'>Back</Button>
+            </div>
             <div className='media-content'>
                 {renderMediaContent()}
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default React.memo(MediaContainer)
+export default React.memo(MediaContainer);

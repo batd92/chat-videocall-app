@@ -43,39 +43,10 @@ export class MessageService {
         );
     }
 
-    getSummaryMessageByRoom(roomId: string): Observable<{ data: MessageDto[] }> {
-        const message = this.messageModel.aggregate([
-            {
-                $match: {
-                    roomId: roomId,
-                    $or: [
-                        { type: 'File' },
-                        { type: 'Link' },
-                        { type: 'Media' }
-                    ]
-                }
-            },
-            {
-                $group: { _id: "$type", messages: { $push: "$$ROOT" } }
-            },
-            {
-                $addFields: {
-                    totalRecord: { $size: "$messages" }
-                }
-            },
-            {
-                $project: {
-                    _id: 1,
-                    content: 1,
-                    type: 1,
-                    userId: 1,
-                    createdAt: 1,
-                    updatedAt: 1
-                }
-            }
-        ]);
-
-        return from(message).pipe(
+    getSummaryMessageByRoom(roomId: string, type: string): Observable<{ data: MessageDto[], totalRecord: number }> {
+        return from(
+            this.messageModel.find({ roomId: roomId, type: 'File' }).exec()
+        ).pipe(
             map((results: any[]) => {
                 const data: MessageDto[] = results.map(result => ({
                     _id: result._id,
@@ -85,7 +56,8 @@ export class MessageService {
                     createdAt: result.createdAt,
                     updatedAt: result.updatedAt
                 }));
-                return { data };
+                const totalRecord: number = results.length;
+                return { data, totalRecord };
             })
         );
     }
@@ -105,9 +77,9 @@ export class MessageService {
     onMessageFromSocket(data: TextRequest): Observable<Message> {
         return from(this.messageModel.create(this.buildMessageRequest(data))).pipe(
             mergeMap((message) => from(this.messageModel.populate(message, {
-                    path: 'userId',
-                    select: '_id email username avatar'
-                })
+                path: 'userId',
+                select: '_id email username avatar'
+            })
             )),
             mergeMap((messageWithUserId) => from(messageWithUserId.populate('replyFromId'))),
             tap((messageRelationship) => {

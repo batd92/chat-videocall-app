@@ -24,10 +24,11 @@ export class MessageController {
         return this.messageService.findAll(query, roomId);
     }
 
-    @Get('/room/attach-file/:roomId')
+    @Get('/room/:roomId/media/:type')
     getSummaryMessageByRoom(
         @Param('roomId', ParseObjectIdPipe) roomId: string,
+        @Param('type') type: string,
     ): Observable<{ data: MessageDto[] }> {
-        return this.messageService.getSummaryMessageByRoom(roomId);
+        return this.messageService.getSummaryMessageByRoom(roomId, type);
     }
 }

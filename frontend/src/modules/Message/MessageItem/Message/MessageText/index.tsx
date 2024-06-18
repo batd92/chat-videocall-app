@@ -15,10 +15,8 @@ interface IProps {
 
 export const MessageText = ({ message, isLastMsg, isMe }: IProps) => {
     switch (message?.type) {
-        case 'Text':
         case 'Link':
-            // Ensure message.content is of type ITextContent
-            const textContent = message.content as ITextContent;
+            const link = message.content as IFileContent[];
             return (
                 <div className={clsx('message-content', isMe && 'message-content__me')}>
                     <div className='message'>
@@ -34,7 +32,7 @@ export const MessageText = ({ message, isLastMsg, isMe }: IProps) => {
                                 </a>
                             )}
                         >
-                            {textContent.toString()}
+                            {link[0].url.toString()}
                         </Linkify>
                     </div>
                     <div className='time'>
@@ -43,7 +41,34 @@ export const MessageText = ({ message, isLastMsg, isMe }: IProps) => {
                     </div>
                 </div>
             );
-
+            case 'Text':
+                    // Ensure message.content is of type ITextContent
+                    const textContent = message.content as ITextContent;
+                    return (
+                        <div className={clsx('message-content', isMe && 'message-content__me')}>
+                            <div className='message'>
+                                <Linkify
+                                    componentDecorator={(decoratedHref, decoratedText, key) => (
+                                        <a
+                                            href={decoratedHref}
+                                            key={key}
+                                            rel='noopener noreferrer'
+                                            target='_blank'
+                                        >
+                                            {decoratedText}
+                                        </a>
+                                    )}
+                                >
+                                    {textContent.toString()}
+                                </Linkify>
+                            </div>
+                            <div className='time'>
+                                {isMe && isLastMsg && (message.seen ? <SeenIcon /> : <SentIcon />)}
+                                <p>{formatDateTime(message?.createdAt)}</p>
+                            </div>
+                        </div>
+                    );
+        
         case 'Call':
             // Ensure message.content is of type IVideoCallContent
             const callContent = message.content as IVideoCallContent;

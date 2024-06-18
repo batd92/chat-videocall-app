@@ -1,3 +1,4 @@
+import { IResponse } from '@/interface/common/index'
 import { IGetMessagesRequest } from '@/interface/request'
 import http from '../axiosClient'
 import { ENDPOINT } from '../endpoint'
@@ -13,6 +14,10 @@ class Message {
                 params: payload.params,
             },
         )
+    }
+
+    getMedia = async (id: string, type: string): Promise<IResponse<any>> => {
+        return http.get(ENDPOINT.MESSAGE.GET_MEDIA.replace(':id', id).replace(':type', type.toLocaleLowerCase()))
     }
 
     getFileMessage = async (url: string) => {

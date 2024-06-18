@@ -19,6 +19,7 @@ export const ENDPOINT = {
     },
     MESSAGE: {
         GET_MESSAGES: 'messages/room/:id',
+        GET_MEDIA: 'messages/room/:id/media/:type',
     },
     UPLOAD: {
         UPLOAD_MEDIA: 'files/upload',

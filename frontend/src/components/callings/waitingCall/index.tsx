@@ -1,7 +1,7 @@
-import { IGetRoomResponse } from '@/interface/response/room';
-import { Avatar, Image, Modal, Row } from 'antd';
 import React from 'react';
+import { Avatar, Image, Modal, Row } from 'antd';
 import './style.scss';
+import { IGetRoomResponse } from '@/interface/response/room';
 
 interface IModalWrap {
     room: IGetRoomResponse;
@@ -11,7 +11,9 @@ interface IModalWrap {
 
 const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
     const userId = 1;
-    const participantFirst = room.participants?.find((participant: any) => participant._id !== userId);
+    const randomChar = () => (Math.random() + 1).toString(36).substring(10);
+    const participants = room.participants ? Array.from(new Set(room.participants)) : [];
+    const participantFirst: any = participants.find((e: any) => e._id !== String(userId));
 
     const renderFooter = () => (
         <div className='waiting-call-card-footer'>
@@ -28,7 +30,7 @@ const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
 
     return (
         <Modal
-            open={isOpen}
+            open={isOpen} // Use 'visible' instead of 'open' for Ant Design Modal
             closeIcon={null}
             footer={renderFooter()}
             className='waiting-call-modal'
@@ -41,12 +43,12 @@ const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
                             <h1 className='name'>
                                 <strong>{room.name}</strong>
                             </h1>
-                            {room.participants.map((participant: any, index: number) => (
+                            {participants.map((participant: any, index) => (
                                 <Avatar
-                                    key={`${participant._id}-${index}`} // Ensure unique key
+                                    key={participant._id + randomChar()} // Ensure unique key for each participant
                                     className='avatar'
                                     src={participant.avatarUrl}
-                                    alt='participant avatar'
+                                    alt={`Participant ${participant._id} avatar`}
                                 />
                             ))}
                         </div>
@@ -57,10 +59,10 @@ const WaitingCall: React.FC<IModalWrap> = ({ room, isOpen, onCancel }) => {
                             </h1>
                             {participantFirst && (
                                 <Avatar
-                                    key={participantFirst._id} // Use the participant's id as the key
+                                    key={randomChar()} // Ensure unique key for participantFirst
                                     className='avatar'
                                     src={participantFirst.avatarUrl}
-                                    alt='participant avatar'
+                                    alt={`Participant ${participantFirst._id} avatar`}
                                 />
                             )}
                         </div>

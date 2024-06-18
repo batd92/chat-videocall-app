@@ -18,7 +18,7 @@ export interface IVideoCallContent {
 }
 export interface IFileContent {
     url: string;
-    type: TypeStorageMessage;
+    type: string;
     file_name: string;
     size: number;
 }
