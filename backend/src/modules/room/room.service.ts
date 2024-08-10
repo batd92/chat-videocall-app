@@ -248,7 +248,7 @@ export class RoomService {
      * @param data 
      * @returns 
      */
-    async updateNameOfRoom(id: string, data: ChangeRoomNameDto): Promise<{ room: Room }> {
+    async updateRoom(id: string, data: ChangeRoomNameDto): Promise<{ room: Room }> {
         const room = await this.roomModel.findById(id)
             .populate({
                 path: 'participants',
@@ -264,9 +264,25 @@ export class RoomService {
         }
         room.name = data.name;
         const updatedRoom = await room.save();
-        await this.cacheManager.set(updatedRoom._id.toString(), updatedRoom);
 
-        return { room: updatedRoom };
+        if (data.userIds) {
+            const existingParticipant = room.participants.find(par => data.userIds.includes(par.userId));
+            if (existingParticipant) {
+                throw new BadRequestException(`user exist in room`);
+            }
+    
+            const participants: IParticipant[] = data.userIds.map(userId => ({
+                roomId: room._id,
+                userId: userId
+            }));
+    
+            this.eventEmitter.emit('addUserToRoom', participants);
+        }
+
+        const roomDB = await this.roomModel.findById(id).exec();
+        await this.cacheManager.set(roomDB._id.toString(), roomDB);
+
+        return { room: roomDB };
     }
 
     /**

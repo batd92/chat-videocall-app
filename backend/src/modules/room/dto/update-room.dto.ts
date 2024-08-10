@@ -1,4 +1,4 @@
-import { ArrayMinSize, IsArray, IsString, IsNotEmpty } from 'class-validator';
+import { ArrayMinSize, IsArray, IsString, IsNotEmpty, IsOptional } from 'class-validator';
 export class UpdateRoomDto {
 
     @IsNotEmpty()
@@ -18,4 +18,8 @@ export class InviteUserDto {
 export class ChangeRoomNameDto {
     @IsNotEmpty()
     readonly name: string;
+
+    @IsOptional()
+    @IsString({ each: true })
+    readonly userIds?: string[];
 }

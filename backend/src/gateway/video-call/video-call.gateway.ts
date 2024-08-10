@@ -32,9 +32,7 @@ export class VideoCallGateway {
         private readonly roomService: RoomService,
         private readonly socketStateService: SocketStateService,
         private readonly jitsiorgService: JitsiorgService,
-    ) {
-        console.log('socketStateService ', socketStateService)
-     }
+    ) {}
 
      private checkRoom(room: IRoom, userId: string) {
         if (!room) {

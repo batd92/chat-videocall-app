@@ -64,12 +64,12 @@ export class RoomController {
         return this.roomService.inviteUserIntoRoom(id, inviteUserDto);
     }
 
-    @Put(':id/name')
-    updateNameOfRoom(
+    @Put(':id/update-room')
+    updateRoom(
         @Param('id', ParseObjectIdPipe) id: string,
         @Body() changeRoomNameDto: ChangeRoomNameDto,
     ): Promise<{ room: Room}> {
-        return this.roomService.updateNameOfRoom(id, changeRoomNameDto);
+        return this.roomService.updateRoom(id, changeRoomNameDto);
     }
 
     @Delete(':id')

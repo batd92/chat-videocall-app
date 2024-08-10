@@ -11,7 +11,7 @@ export const ENDPOINT = {
         INVITES_TO_ROOM: 'rooms/:id/invites',
         TEST_CALL: 'rooms/test-call',
         UPDATE_ROOM: 'rooms/:id',
-        UPDATE_ROOM_NAME: 'rooms/:id/name',
+        UPDATE_ROOM_NAME: 'rooms/:id/update-room',
         UPDATE_ROOM_AVATAR: 'rooms/:id/avatar',
     },
     USER: {

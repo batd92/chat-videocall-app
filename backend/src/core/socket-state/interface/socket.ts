@@ -1,4 +1,4 @@
-import { IParticipant } from "modules/participant/interface/interface-participant"
+import { IParticipant } from "gateway/chat/interface/base"
 
 export interface ISocket {
     id: string

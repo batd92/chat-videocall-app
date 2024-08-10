@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+    # Redis
+    redis-node:
+        image: redis:latest
+        container_name: redis-node
+        ports:
+            - "6379:6379"
+        volumes:
+            - ./containers/redis/redis.conf:/usr/local/etc/redis/redis.conf
+        networks:
+            - oxychat-network
+        command: redis-server /usr/local/etc/redis/redis.conf
+
+    # MongoDB
+    mongo:
+        container_name: mongo
+        hostname: mongo
+        image: mongo 
+        ports:
+            - 27017:27017
+        networks:
+            - oxychat-network
+        volumes:
+            - mongo_data:/data/db
+
+    # Application
+    oxychat:
+        build:
+            context: .
+            dockerfile: ./containers/oxychat-be/Dockerfile
+        container_name: oxychat
+        ports:
+            - 3000:3000
+        networks:
+            - oxychat-network
+        depends_on:
+            - mongo
+            - redis-node
+        env_file:
+            - ./backend/.env
+
+networks:
+  oxychat-network:
+    driver: bridge
+
+volumes:
+  mongo_data:

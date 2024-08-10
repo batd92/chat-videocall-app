@@ -4,9 +4,9 @@ import { Observable, from, mergeMap, catchError, EMPTY } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { RedisPropagatorInterceptor } from '../../core/redis-propagator/redis-propagator.interceptor';
 import { RoomService } from '../../modules/room/room.service';
-import { IRoom } from './interface/base';
 import { BaseRequest } from '../base-dto/base.request';
 import { SocketStateService } from '../../core/socket-state/socket-state.service';
+import { IParticipant, IRoom } from './interface/base';
 
 @WebSocketGateway({
     cors: {
@@ -51,7 +51,15 @@ export class JoinRoomGateway {
         return this.roomService.getParticipantsByRoom(payload.roomId).pipe(
             mergeMap((room: IRoom) => {
                 this.checkRoom(room, payload.userId);
-                this.socketStateService.addUserJoinRoom(payload.roomId, payload.userId, socket, room.participants);
+
+                const participants = room.participants.map(x => {
+                    return {
+                        _id: room._id,
+                        username: x.username
+                    } as IParticipant;
+                  });
+
+                this.socketStateService.addUserJoinRoom(payload.roomId, payload.userId, socket, participants);
                 return from([{ event: 'joinRoom', data: payload, userId: payload.userId, roomId: payload.roomId }]);
             }),
             catchError((error) => {

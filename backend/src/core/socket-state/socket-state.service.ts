@@ -1,7 +1,7 @@
 import { ISocket, IUserameSocket, IRoomState, IUserSocket } from "./interface/socket";
 import { Socket } from "socket.io";
 import { VideoCallRequest } from "../../gateway/video-call/dto/video-call.request.dto";
-import { IParticipant } from "../../modules/participant/interface/interface-participant";
+import { IParticipant } from "gateway/chat/interface/base";
 
 export class SocketStateService {
     private socketsByRoomId = new Map<string, Array<IUserameSocket>>();
@@ -40,7 +40,9 @@ export class SocketStateService {
         this.socketState.set(socket.id, socket);
         this.socketRoomState.set(socket.id, roomId);
         console.log('Room: ', this.socketsByRoomId.get(roomId));
-        this.getRoomState(roomId, participants);
+        if (!this.getRoomState(roomId)) {
+            this.setRoomState(roomId, participants);
+        }
     }
 
     /**
@@ -74,10 +76,11 @@ export class SocketStateService {
         return socketByRoom;
     }
 
-    public getRoomState(roomId: string, participants: IParticipant[]): IRoomState {
-        const room = this.roomStatesById.get(roomId);
-        if (room) return room;
+    public getRoomState(roomId: string): IRoomState {
+        return this.roomStatesById.get(roomId);
+    }
 
+    public setRoomState(roomId: string, participants: IParticipant[]): void {
         const roomState = {
             jitsiName: '',
             jitsiToken: '',
@@ -91,7 +94,6 @@ export class SocketStateService {
             participants
         }
         this.roomStatesById.set(roomId, roomState);
-        return roomState;
     }
 
     public updateRoomState(payload: VideoCallRequest, socket: Socket, jitsiToken: string, jitsiName: string): void {
